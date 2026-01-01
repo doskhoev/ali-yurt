@@ -2,15 +2,19 @@ import { signInWithOtp } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+export const dynamic = "force-dynamic";
 
-export default function LoginPage({
+type SearchParams = Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
+
+export default async function LoginPage({
   searchParams,
 }: {
   searchParams?: SearchParams;
 }) {
-  const checkParam = searchParams?.check;
+  const resolvedSearchParams = await Promise.resolve(searchParams || {});
+  const checkParam = resolvedSearchParams?.check;
   const check = Array.isArray(checkParam) ? checkParam[0] : checkParam;
 
   return (
@@ -18,9 +22,13 @@ export default function LoginPage({
       <h1 className="text-2xl font-semibold">Вход</h1>
 
       {check === "1" && (
-        <p className="rounded-md border p-3 text-sm">
-          Проверь почту — мы отправили ссылку для входа.
-        </p>
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="pt-6">
+            <p className="text-sm text-foreground">
+              Проверьте почту на этом устройстве и перейдите по ссылке для входа.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       <form action={signInWithOtp} className="space-y-3">
