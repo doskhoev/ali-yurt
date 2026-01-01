@@ -7,7 +7,7 @@ import { slugify } from "@/lib/slug";
 export async function createPlaceCategory(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
-  const iconName = String(formData.get("icon_name") ?? "").trim();
+  const iconSvg = String(formData.get("icon_svg") ?? "").trim();
 
   if (!title) return;
 
@@ -17,7 +17,7 @@ export async function createPlaceCategory(formData: FormData) {
   const { error } = await supabase.from("place_categories").insert({
     title,
     slug,
-    icon_name: iconName || null,
+    icon_svg: iconSvg || null,
   });
 
   if (error) {
@@ -42,7 +42,7 @@ export async function deletePlaceCategory(id: string) {
 export async function updatePlaceCategory(id: string, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
-  const iconName = String(formData.get("icon_name") ?? "").trim();
+  const iconSvg = String(formData.get("icon_svg") ?? "").trim();
 
   if (!title) return;
 
@@ -54,7 +54,7 @@ export async function updatePlaceCategory(id: string, formData: FormData) {
     .update({
       title,
       slug,
-      icon_name: iconName || null,
+      icon_svg: iconSvg || null,
     })
     .eq("id", id);
 

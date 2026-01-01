@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
@@ -68,19 +70,16 @@ const components: Components = {
       : String(children);
     
     return (
-      <SyntaxHighlighter
-        language={language}
-        style={oneDark}
-        PreTag="div"
-        className="code-block"
-        customStyle={{
-          margin: "1rem 0",
-          borderRadius: "0.5rem",
-        }}
-        {...props}
-      >
-        {codeString}
-      </SyntaxHighlighter>
+      <div className="code-block-wrapper">
+        <SyntaxHighlighter
+          language={language}
+          style={oneDark}
+          PreTag="div"
+          className="code-block"
+        >
+          {codeString}
+        </SyntaxHighlighter>
+      </div>
     );
   },
   pre({ node, children, ...props }) {
@@ -90,12 +89,83 @@ const components: Components = {
   },
 };
 
-export function Markdown({ value }: { value: string }) {
+type MarkdownProps = {
+  value: string;
+  imageUrls?: string[];
+  imageAlt?: string;
+};
+
+export function Markdown({ value, imageUrls = [], imageAlt = "Изображение" }: MarkdownProps) {
+  // Разбиваем контент на части: текст и изображения
+  const contentParts = React.useMemo(() => {
+    if (imageUrls.length === 0) {
+      return [{ type: "text" as const, content: value }];
+    }
+
+    const parts: Array<{ type: "text" | "image"; content?: string; imageIndex?: number }> = [];
+    const placeholderRegex = /\{\{image:(\d+)\}\}/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = placeholderRegex.exec(value)) !== null) {
+      const imageIndex = parseInt(match[1], 10);
+      
+      // Добавляем текст до плейсхолдера
+      if (match.index > lastIndex) {
+        const textBefore = value.substring(lastIndex, match.index);
+        if (textBefore.trim()) {
+          parts.push({ type: "text", content: textBefore });
+        }
+      }
+
+      // Проверяем, существует ли изображение с таким индексом
+      if (imageIndex >= 0 && imageIndex < imageUrls.length && imageUrls[imageIndex]) {
+        parts.push({ type: "image", imageIndex });
+      }
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Добавляем оставшийся текст
+    if (lastIndex < value.length) {
+      const textAfter = value.substring(lastIndex);
+      if (textAfter.trim()) {
+        parts.push({ type: "text", content: textAfter });
+      }
+    }
+
+    // Если не было плейсхолдеров, возвращаем весь текст
+    if (parts.length === 0) {
+      return [{ type: "text" as const, content: value }];
+    }
+
+    return parts;
+  }, [value, imageUrls]);
+
   return (
-    <article className="prose prose-neutral max-w-none">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {value}
-      </ReactMarkdown>
+    <article className="prose prose-neutral dark:prose-invert max-w-none">
+      {contentParts.map((part, index) => {
+        if (part.type === "image" && part.imageIndex !== undefined) {
+          return (
+            <div key={`image-${index}`} className="flex justify-center my-6">
+              <Image
+                src={imageUrls[part.imageIndex]}
+                alt={`${imageAlt} ${part.imageIndex + 1}`}
+                width={800}
+                height={400}
+                className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
+                style={{ height: "auto" }}
+              />
+            </div>
+          );
+        }
+        
+        return (
+          <ReactMarkdown key={`text-${index}`} remarkPlugins={[remarkGfm]} components={components}>
+            {part.content || ""}
+          </ReactMarkdown>
+        );
+      })}
     </article>
   );
 }

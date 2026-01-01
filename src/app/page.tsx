@@ -12,7 +12,7 @@ export default function Home() {
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       <section className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Али-Юрт</h1>
-        <p className="text-zinc-600">
+        <p className="text-muted-foreground">
           Черновой каркас: новости и интересные места. Комментарии доступны
           зарегистрированным.
         </p>
@@ -21,18 +21,18 @@ export default function Home() {
       <section className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/news"
-          className="rounded-xl border p-5 hover:bg-zinc-50 transition-colors"
+          className="rounded-xl border p-5 hover:bg-muted transition-colors"
         >
           <div className="font-medium">Новости</div>
-          <div className="text-sm text-zinc-600">Список и страницы новостей</div>
+          <div className="text-sm text-muted-foreground">Список и страницы новостей</div>
         </Link>
 
         <Link
           href="/places"
-          className="rounded-xl border p-5 hover:bg-zinc-50 transition-colors"
+          className="rounded-xl border p-5 hover:bg-muted transition-colors"
         >
           <div className="font-medium">Места</div>
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-muted-foreground">
             Интересные места и описание
           </div>
         </Link>

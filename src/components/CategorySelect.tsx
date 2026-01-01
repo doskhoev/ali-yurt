@@ -8,10 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 type Category = {
   id: string;
   title: string;
+  icon_svg?: string | null;
 };
 
 type CategorySelectProps = {
@@ -41,7 +43,15 @@ export function CategorySelect({
         <SelectContent>
           {categories.map((category) => (
             <SelectItem key={category.id} value={category.id}>
-              {category.title}
+              <div className="flex items-center gap-2">
+                {category.icon_svg && (
+                  <CategoryIcon 
+                    svgCode={category.icon_svg} 
+                    className="w-4 h-4 text-primary flex-shrink-0"
+                  />
+                )}
+                <span>{category.title}</span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

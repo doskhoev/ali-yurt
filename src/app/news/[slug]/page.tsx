@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/Markdown";
-import { createNewsComment } from "./actions";
+import { createNewsComment, deleteComment } from "./actions";
 import { NEWS_COVER_BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { getIsAdmin } from "@/lib/auth/admin";
+import { Trash2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,7 @@ type NewsRow = {
   id: string;
   slug: string;
   title: string;
-  cover_image_path: string | null;
+  image_paths: string[];
   excerpt: string | null;
   content: string;
   published_at: string | null;
@@ -45,7 +47,7 @@ async function getNewsBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("news")
-    .select("id, slug, title, cover_image_path, excerpt, content, published_at")
+    .select("id, slug, title, image_paths, excerpt, content, published_at")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -73,10 +75,10 @@ export async function generateMetadata({
     article.content.slice(0, 160).replace(/[#*`]/g, "").trim() ||
     "Новость из справочника жителя Али-Юрт";
 
-  const coverUrl = article.cover_image_path
+  const firstImageUrl = article.image_paths && article.image_paths.length > 0
     ? (await createSupabaseServerClient()).storage
         .from(NEWS_COVER_BUCKET)
-        .getPublicUrl(article.cover_image_path).data.publicUrl
+        .getPublicUrl(article.image_paths[0]).data.publicUrl
     : null;
 
   return {
@@ -91,13 +93,13 @@ export async function generateMetadata({
       url,
       type: "article",
       publishedTime: article.published_at || undefined,
-      images: coverUrl ? [{ url: coverUrl, alt: article.title }] : undefined,
+      images: firstImageUrl ? [{ url: firstImageUrl, alt: article.title }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description,
-      images: coverUrl ? [coverUrl] : undefined,
+      images: firstImageUrl ? [firstImageUrl] : undefined,
     },
   };
 }
@@ -116,14 +118,9 @@ export default async function NewsSlugPage({
 
   const supabase = await createSupabaseServerClient();
 
-  const coverUrl = article.cover_image_path
-    ? supabase.storage
-        .from(NEWS_COVER_BUCKET)
-        .getPublicUrl(article.cover_image_path).data.publicUrl
-    : null;
-
   const { data: authData } = await supabase.auth.getUser();
   const user = authData.user;
+  const isAdmin = user ? await getIsAdmin() : false;
 
   const { data: commentsData, error: commentsError } = await supabase
     .from("comments")
@@ -154,26 +151,28 @@ export default async function NewsSlugPage({
             {article.title}
           </h1>
           {article.published_at && (
-            <div className="text-sm text-zinc-600">
+            <div className="text-sm text-muted-foreground">
               {formatDateTimeRu(article.published_at)}
             </div>
           )}
         </header>
 
-        {coverUrl && (
-          <div className="flex justify-center">
-            <Image
-              src={coverUrl}
-              alt={article.title}
-              width={800}
-              height={400}
-              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
-              style={{ height: "auto" }}
-            />
-          </div>
-        )}
+        {(() => {
+          const imagePaths = Array.isArray(article.image_paths) ? article.image_paths : [];
+          const imageUrls = imagePaths.map((imagePath) =>
+            supabase.storage
+              .from(NEWS_COVER_BUCKET)
+              .getPublicUrl(imagePath).data.publicUrl
+          );
 
-        <Markdown value={article.content} />
+          return (
+            <Markdown
+              value={article.content}
+              imageUrls={imageUrls}
+              imageAlt={article.title}
+            />
+          );
+        })()}
       </article>
 
       <section className="space-y-4">
@@ -186,7 +185,7 @@ export default async function NewsSlugPage({
         )}
 
         {comments.length === 0 ? (
-          <p className="text-sm text-zinc-600">Пока нет комментариев.</p>
+          <p className="text-sm text-muted-foreground">Пока нет комментариев.</p>
         ) : (
           <ul className="space-y-3">
             {comments.map((c) => {
@@ -199,11 +198,25 @@ export default async function NewsSlugPage({
                 <li key={c.id} className="rounded-xl border p-4 space-y-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <div className="text-sm font-medium">{authorLabel}</div>
-                    <div className="text-xs text-zinc-500">
-                      {formatDateTimeRu(c.created_at)}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-muted-foreground">
+                        {formatDateTimeRu(c.created_at)}
+                      </div>
+                      {isAdmin && (
+                        <form action={deleteComment.bind(null, c.id)} className="inline">
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </form>
+                      )}
                     </div>
                   </div>
-                  <div className="text-sm text-zinc-800 whitespace-pre-wrap">
+                  <div className="text-sm text-foreground whitespace-pre-wrap">
                     {c.body}
                   </div>
                 </li>
@@ -213,7 +226,7 @@ export default async function NewsSlugPage({
         )}
 
         {!user ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted-foreground">
             Чтобы оставить комментарий, войдите в аккаунт.
           </p>
         ) : (

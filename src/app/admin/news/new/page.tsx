@@ -19,7 +19,7 @@ export default function AdminNewsNewPage({
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Новая новость</h1>
-        <p className="text-sm text-zinc-600">Контент в Markdown.</p>
+        <p className="text-sm text-muted-foreground">Контент в Markdown.</p>
         {error && (
           <p className="text-sm text-red-600">Ошибка: {decodeURIComponent(error)}</p>
         )}

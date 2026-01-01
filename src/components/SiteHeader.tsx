@@ -1,7 +1,18 @@
 import Link from "next/link";
+import { Settings, User } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/login/actions";
 import { getIsAdmin } from "@/lib/auth/admin";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/components/LogoutButton";
+import { MobileMenu } from "@/components/MobileMenu";
 
 export async function SiteHeader() {
   const supabase = await createSupabaseServerClient();
@@ -10,50 +21,73 @@ export async function SiteHeader() {
   const isAdmin = user ? await getIsAdmin() : false;
 
   return (
-    <header className="border-b">
+    <header className="border-b border-border bg-background">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between gap-4">
-        <nav className="flex items-center gap-4">
+        <div className="flex items-center gap-12">
+          <MobileMenu isAdmin={isAdmin} user={user} />
           <Link href="/" className="font-semibold">
             Али-Юрт
           </Link>
-          <Link href="/news" className="text-sm text-zinc-700 hover:text-black">
-            Новости
-          </Link>
-          <Link
-            href="/places"
-            className="text-sm text-zinc-700 hover:text-black"
-          >
-            Места
-          </Link>
-          {isAdmin && (
-            <Link href="/admin" className="text-sm text-zinc-700 hover:text-black">
-              Админка
+          <nav className="hidden md:flex items-center gap-4">
+            <Link href="/news" className="text-sm text-muted-foreground hover:text-foreground">
+              Новости
             </Link>
-          )}
-        </nav>
+            <Link
+              href="/places"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Места
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              О селе
+            </Link>
+            {isAdmin && (
+              <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+                Админка
+              </Link>
+            )}
+          </nav>
+        </div>
 
         <div className="flex items-center gap-3">
           {!user ? (
             <Link
               href="/login"
-              className="text-sm font-medium text-zinc-700 hover:text-black"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Вход
             </Link>
           ) : (
-            <>
-              <span className="text-xs text-zinc-600 hidden sm:inline">
-                {user.email}
-              </span>
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="text-sm font-medium text-zinc-700 hover:text-black"
-                >
-                  Выйти
-                </button>
-              </form>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">{user.email}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Аккаунт</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Настройки</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <LogoutButton />
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
