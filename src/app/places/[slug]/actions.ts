@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getIsAdmin } from "@/lib/auth/admin";
 
 export async function createPlaceComment(formData: FormData) {
   const entityId = String(formData.get("entity_id") ?? "").trim();
@@ -24,6 +25,27 @@ export async function createPlaceComment(formData: FormData) {
     author_id: user.id,
     body,
   });
+
+  const h = await headers();
+  const referer = h.get("referer");
+  redirect(referer ?? "/places");
+}
+
+export async function deleteComment(commentId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const isAdmin = await getIsAdmin();
+  if (!isAdmin) {
+    redirect("/");
+  }
+
+  await supabase.from("comments").delete().eq("id", commentId);
 
   const h = await headers();
   const referer = h.get("referer");

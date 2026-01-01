@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trash } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -43,8 +43,8 @@ export function DeleteButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Trash className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
         </TooltipTrigger>

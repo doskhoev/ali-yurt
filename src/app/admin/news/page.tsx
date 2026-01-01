@@ -94,7 +94,7 @@ export default async function AdminNewsIndexPage() {
                 <div className="flex items-center gap-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" asChild>
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
                         <Link href={`/admin/news/${n.id}`}>
                           <Pencil className="h-4 w-4" />
                         </Link>

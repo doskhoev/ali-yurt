@@ -3,7 +3,7 @@
 import * as React from "react";
 
 type Theme = "light" | "dark" | "system";
-type AccentColor = "default" | "blue" | "green" | "purple" | "orange" | "red" | "pink";
+type AccentColor = "default" | "blue" | "green" | "purple" | "orange" | "red" | "pink" | "yellow" | "lightBlue";
 
 const THEME_STORAGE_KEY = "ali-yurt-theme";
 const ACCENT_STORAGE_KEY = "ali-yurt-accent";
@@ -30,14 +30,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     const root = document.documentElement;
-    
+
     // Apply theme
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
       root.classList.toggle("dark", systemTheme === "dark");
-      
+
       // Listen for system theme changes
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const handleChange = (e: MediaQueryListEvent) => {
@@ -82,8 +82,8 @@ const ThemeContext = React.createContext<{
 }>({
   theme: "system",
   accentColor: "default",
-  updateTheme: () => {},
-  updateAccentColor: () => {},
+  updateTheme: () => { },
+  updateAccentColor: () => { },
 });
 
 export function useTheme() {

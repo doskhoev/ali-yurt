@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/Markdown";
-import { createNewsComment } from "./actions";
+import { createNewsComment, deleteComment } from "./actions";
 import { NEWS_COVER_BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { getIsAdmin } from "@/lib/auth/admin";
+import { Trash2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +120,7 @@ export default async function NewsSlugPage({
 
   const { data: authData } = await supabase.auth.getUser();
   const user = authData.user;
+  const isAdmin = user ? await getIsAdmin() : false;
 
   const { data: commentsData, error: commentsError } = await supabase
     .from("comments")
@@ -195,8 +198,22 @@ export default async function NewsSlugPage({
                 <li key={c.id} className="rounded-xl border p-4 space-y-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <div className="text-sm font-medium">{authorLabel}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDateTimeRu(c.created_at)}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-muted-foreground">
+                        {formatDateTimeRu(c.created_at)}
+                      </div>
+                      {isAdmin && (
+                        <form action={deleteComment.bind(null, c.id)} className="inline">
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </form>
+                      )}
                     </div>
                   </div>
                   <div className="text-sm text-foreground whitespace-pre-wrap">

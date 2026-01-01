@@ -94,7 +94,7 @@ export default async function AdminPlacesIndexPage() {
                 <div className="flex items-center gap-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" asChild>
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
                         <Link href={`/admin/places/${p.id}`}>
                           <Pencil className="w-4 h-4" />
                         </Link>

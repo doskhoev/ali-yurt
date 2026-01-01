@@ -91,7 +91,7 @@ export default async function AdminPlaceCategoriesPage({
                   <div className="flex items-start gap-2 pt-0">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
                           <Link href={`/admin/place-categories/${c.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Link>

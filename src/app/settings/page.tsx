@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Sun, Moon, Monitor, Palette } from "lucide-react";
 
 const accentColors = [
-  { id: "default", name: "По умолчанию", color: "oklch(0.205 0 0)" },
-  { id: "blue", name: "Синий", color: "oklch(0.5 0.2 250)" },
-  { id: "green", name: "Зеленый", color: "oklch(0.5 0.2 150)" },
-  { id: "purple", name: "Фиолетовый", color: "oklch(0.5 0.2 300)" },
-  { id: "orange", name: "Оранжевый", color: "oklch(0.6 0.2 50)" },
+  { id: "default", name: "По умолчанию", color: "oklch(0.5 0 0)" },
   { id: "red", name: "Красный", color: "oklch(0.55 0.2 20)" },
+  { id: "orange", name: "Оранжевый", color: "oklch(0.6 0.2 50)" },
+  { id: "yellow", name: "Желтый", color: "oklch(0.8 0.2 100)" },
+  { id: "green", name: "Зеленый", color: "oklch(0.5 0.2 150)" },
+  { id: "lightBlue", name: "Голубой", color: "oklch(0.6 0.2 220)" },
+  { id: "blue", name: "Синий", color: "oklch(0.5 0.2 250)" },
+  { id: "purple", name: "Фиолетовый", color: "oklch(0.5 0.2 300)" },
   { id: "pink", name: "Розовый", color: "oklch(0.6 0.2 340)" },
 ] as const;
 
@@ -79,22 +81,27 @@ export default function SettingsPage() {
           <CardDescription>Выберите цвет для акцентных элементов</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             {accentColors.map((accent) => (
               <button
                 key={accent.id}
                 onClick={() => updateAccentColor(accent.id as any)}
-                className={`relative aspect-square rounded-lg border-2 transition-all ${
-                  accentColor === accent.id
-                    ? "border-foreground scale-110"
-                    : "border-border hover:border-foreground/50"
-                }`}
-                style={{ backgroundColor: accent.color }}
+                className={`relative w-16 h-16 rounded-full border-2 transition-all ${accentColor === accent.id
+                  ? "border-foreground scale-110"
+                  : "border-border hover:border-foreground/50"
+                  } ${accent.id === "default"
+                    ? "bg-black dark:bg-white"
+                    : ""
+                  }`}
+                style={accent.id !== "default" ? { backgroundColor: accent.color } : undefined}
                 title={accent.name}
               >
                 {accentColor === accent.id && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-foreground" />
+                    <div className={`w-4 h-4 rounded-full ${accent.id === 'default'
+                      ? "bg-background"
+                      : "bg-foreground"
+                      }`} />
                   </div>
                 )}
               </button>
