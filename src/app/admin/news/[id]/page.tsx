@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { deleteNews, updateNews, uploadNewsCover } from "../actions";
+import { deleteNews, updateNews, uploadNewsImage, deleteNewsImage } from "../actions";
 import { NEWS_COVER_BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ type NewsRow = {
   id: string;
   slug: string;
   title: string;
-  cover_image_path: string | null;
+  image_paths: string[];
   excerpt: string | null;
   content: string;
   published_at: string | null;
@@ -50,10 +50,10 @@ export default async function AdminNewsEditPage({
     return (
       <main className="mx-auto max-w-3xl px-6 py-10 space-y-3">
         <h1 className="text-2xl font-semibold">Некорректный ID</h1>
-        <p className="text-sm text-zinc-600">Ожидался UUID.</p>
+        <p className="text-sm text-muted-foreground">Ожидался UUID.</p>
         <Link
           href="/admin/news"
-          className="text-sm text-zinc-700 hover:text-black"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Назад
         </Link>
@@ -65,7 +65,7 @@ export default async function AdminNewsEditPage({
   const { data: row, error } = await supabase
     .from("news")
     .select(
-      "id, slug, title, cover_image_path, excerpt, content, published_at, updated_at"
+      "id, slug, title, image_paths, excerpt, content, published_at, updated_at"
     )
     .eq("id", id)
     .single();
@@ -75,7 +75,7 @@ export default async function AdminNewsEditPage({
       <main className="mx-auto max-w-3xl px-6 py-10 space-y-3">
         <h1 className="text-2xl font-semibold">Новость не найдена</h1>
         <p className="text-sm text-red-600">{error?.message ?? "not found"}</p>
-        <Link href="/admin/news" className="text-sm text-zinc-700 hover:text-black">
+        <Link href="/admin/news" className="text-sm text-muted-foreground hover:text-foreground">
           ← Назад
         </Link>
       </main>
@@ -83,12 +83,6 @@ export default async function AdminNewsEditPage({
   }
 
   const item = row as NewsRow;
-
-  const coverUrl = item.cover_image_path
-    ? supabase.storage
-      .from(NEWS_COVER_BUCKET)
-      .getPublicUrl(item.cover_image_path).data.publicUrl
-    : null;
 
   const errParam = searchParams?.error;
   const err = Array.isArray(errParam) ? errParam[0] : errParam;
@@ -98,11 +92,11 @@ export default async function AdminNewsEditPage({
       <header className="space-y-1">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold">Редактировать новость</h1>
-          <Link href="/admin/news" className="text-sm text-zinc-700 hover:text-black">
+          <Link href="/admin/news" className="text-sm text-muted-foreground hover:text-foreground">
             ← К списку
           </Link>
         </div>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           обновлено: {formatDateTimeRu(item.updated_at)} · статус:{" "}
           {item.published_at ? "опубликовано" : "черновик"}
         </p>
@@ -110,34 +104,52 @@ export default async function AdminNewsEditPage({
       </header>
 
       <section className="rounded-xl border p-4 space-y-3">
-        <div className="font-medium">Обложка</div>
+        <div className="font-medium">Изображения</div>
 
-        {coverUrl ? (
-          <div className="flex justify-center">
-            <Image
-              src={coverUrl}
-              alt={item.title}
-              width={800}
-              height={400}
-              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
-              style={{ height: "auto" }}
-            />
+        {item.image_paths && item.image_paths.length > 0 ? (
+          <div className="space-y-4">
+            {item.image_paths.map((imagePath, index) => {
+              const imageUrl = supabase.storage
+                .from(NEWS_COVER_BUCKET)
+                .getPublicUrl(imagePath).data.publicUrl;
+              
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-center">
+                    <Image
+                      src={imageUrl}
+                      alt={`${item.title} - изображение ${index + 1}`}
+                      width={800}
+                      height={400}
+                      className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
+                      style={{ height: "auto" }}
+                    />
+                  </div>
+                  <form action={deleteNewsImage.bind(null, item.id, imagePath)} className="flex justify-center">
+                    <Button type="submit" variant="destructive" size="sm">
+                      Удалить изображение
+                    </Button>
+                  </form>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <p className="text-sm text-zinc-600">Обложка не задана.</p>
+          <p className="text-sm text-muted-foreground">Изображения не загружены.</p>
         )}
 
         <form
-          action={uploadNewsCover.bind(null, item.id)}
+          action={uploadNewsImage.bind(null, item.id)}
           className="flex flex-col sm:flex-row gap-3 items-start sm:items-end"
         >
           <div className="space-y-2">
-            <Label htmlFor="cover">Загрузить новую обложку</Label>
+            <Label htmlFor="images">Загрузить изображения</Label>
             <Input
-              id="cover"
-              name="cover"
+              id="images"
+              name="images"
               type="file"
               accept="image/*"
+              multiple
               className="text-sm"
               required
             />
@@ -146,10 +158,10 @@ export default async function AdminNewsEditPage({
             Загрузить
           </Button>
         </form>
-        <p className="text-xs text-zinc-600">
-          Файл загрузится в Supabase Storage bucket{" "}
-          <span className="font-mono">{NEWS_COVER_BUCKET}</span>, путь будет
-          записан в <span className="font-mono">news.cover_image_path</span>.
+        <p className="text-xs text-muted-foreground">
+          Можно выбрать несколько файлов. Файлы загрузятся в Supabase Storage bucket{" "}
+          <span className="font-mono">{NEWS_COVER_BUCKET}</span>, пути будут
+          добавлены в массив <span className="font-mono">news.image_paths</span>.
         </p>
       </section>
 
@@ -216,7 +228,7 @@ export default async function AdminNewsEditPage({
             {item.published_at && (
               <Link
                 href={`/news/${item.slug}`}
-                className="text-sm text-zinc-700 hover:text-black"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 Открыть на сайте →
               </Link>

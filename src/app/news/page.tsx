@@ -18,7 +18,7 @@ type NewsRow = {
   id: string;
   slug: string;
   title: string;
-  cover_image_path: string | null;
+  image_paths: string[];
   excerpt: string | null;
   published_at: string | null;
 };
@@ -29,7 +29,7 @@ export default async function NewsIndexPage() {
 
   const query = supabase
     .from("news")
-    .select("id, slug, title, cover_image_path, excerpt, published_at")
+    .select("id, slug, title, image_paths, excerpt, published_at")
     .order("published_at", { ascending: false })
     .limit(30);
 
@@ -57,35 +57,36 @@ export default async function NewsIndexPage() {
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Новости</h1>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           {isAdmin ? "Админ видит все, включая черновики." : "Показаны только опубликованные."}
         </p>
       </header>
 
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-600">Пока нет опубликованных новостей.</p>
+        <p className="text-sm text-muted-foreground">Пока нет опубликованных новостей.</p>
       ) : (
         <ul className="space-y-4">
           {items.map((n) => {
-            const coverUrl = n.cover_image_path
+            const imagePaths = Array.isArray(n.image_paths) ? n.image_paths : [];
+            const firstImageUrl = imagePaths.length > 0
               ? supabase.storage
                   .from(NEWS_COVER_BUCKET)
-                  .getPublicUrl(n.cover_image_path).data.publicUrl
+                  .getPublicUrl(imagePaths[0]).data.publicUrl
               : null;
 
             return (
               <li
                 key={n.id}
                 className={`rounded-xl border overflow-hidden ${
-                  !n.published_at ? "bg-zinc-50 border-zinc-200 opacity-75" : ""
+                  !n.published_at ? "bg-muted/50 border-border opacity-75" : ""
                 }`}
               >
                 <Link href={`/news/${n.slug}`} className="block">
                   <div className="flex gap-4">
-                    {coverUrl && (
+                    {firstImageUrl && (
                       <div className="relative w-32 h-32 flex-shrink-0">
                         <Image
-                          src={coverUrl}
+                          src={firstImageUrl}
                           alt={n.title}
                           fill
                           className="object-cover"
@@ -96,13 +97,13 @@ export default async function NewsIndexPage() {
                       <div className="flex items-center gap-2">
                         <div className="text-lg font-medium">{n.title}</div>
                         {!n.published_at && (
-                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
                             Черновик
                           </span>
                         )}
                       </div>
                       {n.excerpt && (
-                        <div className="text-sm text-zinc-600">{n.excerpt}</div>
+                        <div className="text-sm text-muted-foreground">{n.excerpt}</div>
                       )}
                     </div>
                   </div>

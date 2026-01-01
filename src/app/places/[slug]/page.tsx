@@ -8,6 +8,7 @@ import { PLACE_COVER_BUCKET } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ type PlaceRow = {
   slug: string;
   title: string;
   category_id: string | null;
-  cover_image_path: string | null;
+  image_paths: string[];
   excerpt: string | null;
   content: string;
   published_at: string | null;
@@ -46,7 +47,7 @@ async function getPlaceBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("places")
-    .select("id, slug, title, category_id, cover_image_path, excerpt, content, published_at")
+    .select("id, slug, title, category_id, image_paths, excerpt, content, published_at")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -75,10 +76,10 @@ export async function generateMetadata({
     "Интересное место в селе Али-Юрт";
 
   const supabase = await createSupabaseServerClient();
-  const coverUrl = place.cover_image_path
+  const firstImageUrl = place.image_paths && place.image_paths.length > 0
     ? supabase.storage
         .from(PLACE_COVER_BUCKET)
-        .getPublicUrl(place.cover_image_path).data.publicUrl
+        .getPublicUrl(place.image_paths[0]).data.publicUrl
     : null;
 
   return {
@@ -93,13 +94,13 @@ export async function generateMetadata({
       url,
       type: "article",
       publishedTime: place.published_at || undefined,
-      images: coverUrl ? [{ url: coverUrl, alt: place.title }] : undefined,
+      images: firstImageUrl ? [{ url: firstImageUrl, alt: place.title }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: place.title,
       description,
-      images: coverUrl ? [coverUrl] : undefined,
+      images: firstImageUrl ? [firstImageUrl] : undefined,
     },
   };
 }
@@ -118,19 +119,13 @@ export default async function PlaceSlugPage({
 
   const supabase = await createSupabaseServerClient();
 
-  const coverUrl = item.cover_image_path
-    ? supabase.storage
-        .from(PLACE_COVER_BUCKET)
-        .getPublicUrl(item.cover_image_path).data.publicUrl
-    : null;
-
   const { data: category } = item.category_id
     ? await supabase
         .from("place_categories")
-        .select("id, title")
+        .select("id, title, icon_svg")
         .eq("id", item.category_id)
         .maybeSingle()
-    : { data: null as null | { id: string; title: string } };
+    : { data: null as null | { id: string; title: string; icon_svg: string | null } };
 
   const { data: authData } = await supabase.auth.getUser();
   const user = authData.user;
@@ -162,29 +157,40 @@ export default async function PlaceSlugPage({
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">{item.title}</h1>
           {item.published_at && (
-            <div className="text-sm text-zinc-600">
+            <div className="text-sm text-muted-foreground">
               {formatDateTimeRu(item.published_at)}
             </div>
           )}
           {category?.title && (
-            <div className="text-sm text-zinc-600">Категория: {category.title}</div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Категория:</span>
+              {category.icon_svg && (
+                <CategoryIcon 
+                  svgCode={category.icon_svg} 
+                  className="w-5 h-5 text-primary"
+                />
+              )}
+              <span>{category.title}</span>
+            </div>
           )}
         </header>
 
-        {coverUrl && (
-          <div className="flex justify-center">
-            <Image
-              src={coverUrl}
-              alt={item.title}
-              width={800}
-              height={400}
-              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
-              style={{ height: "auto" }}
-            />
-          </div>
-        )}
+        {(() => {
+          const imagePaths = Array.isArray(item.image_paths) ? item.image_paths : [];
+          const imageUrls = imagePaths.map((imagePath) =>
+            supabase.storage
+              .from(PLACE_COVER_BUCKET)
+              .getPublicUrl(imagePath).data.publicUrl
+          );
 
-        <Markdown value={item.content} />
+          return (
+            <Markdown
+              value={item.content}
+              imageUrls={imageUrls}
+              imageAlt={item.title}
+            />
+          );
+        })()}
       </article>
 
       <section className="space-y-4">
@@ -197,7 +203,7 @@ export default async function PlaceSlugPage({
         )}
 
         {comments.length === 0 ? (
-          <p className="text-sm text-zinc-600">Пока нет комментариев.</p>
+          <p className="text-sm text-muted-foreground">Пока нет комментариев.</p>
         ) : (
           <ul className="space-y-3">
             {comments.map((c) => {
@@ -210,11 +216,11 @@ export default async function PlaceSlugPage({
                 <li key={c.id} className="rounded-xl border p-4 space-y-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <div className="text-sm font-medium">{authorLabel}</div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-muted-foreground">
                       {formatDateTimeRu(c.created_at)}
                     </div>
                   </div>
-                  <div className="text-sm text-zinc-800 whitespace-pre-wrap">
+                  <div className="text-sm text-foreground whitespace-pre-wrap">
                     {c.body}
                   </div>
                 </li>
@@ -224,7 +230,7 @@ export default async function PlaceSlugPage({
         )}
 
         {!user ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted-foreground">
             Чтобы оставить комментарий, войдите в аккаунт.
           </p>
         ) : (

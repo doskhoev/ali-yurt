@@ -36,12 +36,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('ali-yurt-theme') || 'system';
+                const accent = localStorage.getItem('ali-yurt-accent') || 'default';
+                const root = document.documentElement;
+                
+                if (accent !== 'default') {
+                  root.setAttribute('data-accent', accent);
+                }
+                
+                if (theme === 'system') {
+                  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  if (systemTheme === 'dark') {
+                    root.classList.add('dark');
+                  }
+                } else if (theme === 'dark') {
+                  root.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="min-h-dvh bg-white text-black">
+          <div className="min-h-dvh bg-background text-foreground">
             <SiteHeader />
             {children}
           </div>

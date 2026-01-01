@@ -3,8 +3,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { deletePlaceCategory, updatePlaceCategory } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DeleteButton } from "@/components/DeleteButton";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -12,7 +14,7 @@ type CategoryRow = {
   id: string;
   slug: string;
   title: string;
-  icon_name: string | null;
+  icon_svg: string | null;
   created_at: string;
 };
 
@@ -33,10 +35,10 @@ export default async function AdminPlaceCategoryEditPage({
     return (
       <main className="mx-auto max-w-3xl px-6 py-10 space-y-3">
         <h1 className="text-2xl font-semibold">Некорректный ID</h1>
-        <p className="text-sm text-zinc-600">Ожидался UUID.</p>
+        <p className="text-sm text-muted-foreground">Ожидался UUID.</p>
         <Link
           href="/admin/place-categories"
-          className="text-sm text-zinc-700 hover:text-black"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Назад
         </Link>
@@ -47,7 +49,7 @@ export default async function AdminPlaceCategoryEditPage({
   const supabase = await createSupabaseServerClient();
   const { data: row, error } = await supabase
     .from("place_categories")
-    .select("id, slug, title, icon_name, created_at")
+    .select("id, slug, title, icon_svg, created_at")
     .eq("id", id)
     .single();
 
@@ -58,7 +60,7 @@ export default async function AdminPlaceCategoryEditPage({
         <p className="text-sm text-red-600">{error?.message ?? "not found"}</p>
         <Link
           href="/admin/place-categories"
-          className="text-sm text-zinc-700 hover:text-black"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Назад
         </Link>
@@ -78,12 +80,12 @@ export default async function AdminPlaceCategoryEditPage({
           <h1 className="text-2xl font-semibold">Редактировать категорию</h1>
           <Link
             href="/admin/place-categories"
-            className="text-sm text-zinc-700 hover:text-black"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← К списку
           </Link>
         </div>
-        <div className="text-xs text-zinc-600">
+        <div className="text-xs text-muted-foreground">
           id: <span className="font-mono">{item.id}</span>
         </div>
         {err && (
@@ -110,13 +112,26 @@ export default async function AdminPlaceCategoryEditPage({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="icon_name">Иконка (icon_name)</Label>
-          <Input
-            id="icon_name"
-            name="icon_name"
-            defaultValue={item.icon_name ?? ""}
-            placeholder="Например: map-pin"
+          <Label htmlFor="icon_svg">Иконка (SVG код)</Label>
+          <Textarea
+            id="icon_svg"
+            name="icon_svg"
+            rows={12}
+            className="font-mono text-sm"
+            defaultValue={item.icon_svg ?? ""}
+            placeholder='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">...</svg>'
           />
+          <p className="text-xs text-muted-foreground">
+            Вставьте SVG код. Используйте <span className="font-mono">currentColor</span> для fill/stroke, чтобы иконка использовала цвет акцента темы.
+          </p>
+          {item.icon_svg && (
+            <div className="mt-2 p-4 border rounded-lg bg-muted/50 flex items-center justify-center min-h-[100px]">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
+                <CategoryIcon svgCode={item.icon_svg} className="w-16 h-16 text-primary" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3">

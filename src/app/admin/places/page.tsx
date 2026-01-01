@@ -37,7 +37,7 @@ export default async function AdminPlacesIndexPage() {
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Админка · Места</h1>
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted-foreground">
             Здесь видны и черновики, и опубликованные.
           </p>
           {error && (
@@ -45,23 +45,20 @@ export default async function AdminPlacesIndexPage() {
           )}
         </div>
 
-        <Link
-          href="/admin/places/new"
-          className="rounded-md bg-black px-4 py-2 text-white"
-        >
-          + Место
-        </Link>
+        <Button asChild>
+          <Link href="/admin/places/new">+ Место</Link>
+        </Button>
       </header>
 
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-600">Пока нет мест.</p>
+        <p className="text-sm text-muted-foreground">Пока нет мест.</p>
       ) : (
         <ul className="space-y-3">
           {items.map((p) => (
             <li
               key={p.id}
               className={`rounded-xl border p-4 ${
-                !p.published_at ? "bg-zinc-50 border-zinc-200 opacity-75" : ""
+                !p.published_at ? "bg-muted/50 border-border opacity-75" : ""
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -70,7 +67,7 @@ export default async function AdminPlacesIndexPage() {
                     {p.published_at ? (
                       <Link
                         href={`/places/${p.slug}`}
-                        className="font-medium hover:text-zinc-600 block"
+                        className="font-medium hover:text-foreground block"
                       >
                         {p.title}
                       </Link>
@@ -78,15 +75,15 @@ export default async function AdminPlacesIndexPage() {
                       <div className="font-medium">{p.title}</div>
                     )}
                     {!p.published_at && (
-                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                      <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
                         Черновик
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-zinc-600">
+                  <div className="text-xs text-muted-foreground">
                     slug: <span className="font-mono">{p.slug}</span>
                   </div>
-                  <div className="text-xs text-zinc-600">
+                  <div className="text-xs text-muted-foreground">
                     обновлено: {formatDateTimeRu(p.updated_at)}
                     {p.published_at && (
                       <> · опубликовано: {formatDateTimeRu(p.published_at)}</>

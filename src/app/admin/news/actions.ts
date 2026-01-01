@@ -96,37 +96,83 @@ export async function deleteNews(id: string) {
   redirect("/admin/news");
 }
 
-export async function uploadNewsCover(id: string, formData: FormData) {
-  const file = formData.get("cover") as File | null;
-  if (!file || file.size === 0) {
-    redirect(`/admin/news/${id}?error=${encodeURIComponent("Файл не выбран")}`);
+export async function uploadNewsImage(id: string, formData: FormData) {
+  const files = formData.getAll("images") as File[];
+  const validFiles = files.filter((file) => file && file.size > 0);
+
+  if (validFiles.length === 0) {
+    redirect(`/admin/news/${id}?error=${encodeURIComponent("Файлы не выбраны")}`);
   }
 
   const supabase = await createSupabaseServerClient();
 
-  const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-  const objectPath = `news/${id}/cover.${ext}`;
+  // Получаем текущий массив изображений
+  const { data: news } = await supabase
+    .from("news")
+    .select("image_paths")
+    .eq("id", id)
+    .single();
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const { error: uploadError } = await supabase.storage
-    .from(NEWS_COVER_BUCKET)
-    .upload(objectPath, bytes, {
-      contentType: file.type || "application/octet-stream",
-      upsert: true,
-    });
+  const currentPaths = (news?.image_paths || []) as string[];
+  const newPaths: string[] = [...currentPaths];
 
-  if (uploadError) {
-    redirect(`/admin/news/${id}?error=${encodeURIComponent(uploadError.message)}`);
+  // Загружаем все файлы
+  for (const file of validFiles) {
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+    const objectPath = `news/${id}/${crypto.randomUUID()}.${ext}`;
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: uploadError } = await supabase.storage
+      .from(NEWS_COVER_BUCKET)
+      .upload(objectPath, bytes, {
+        contentType: file.type || "application/octet-stream",
+      });
+
+    if (uploadError) {
+      redirect(`/admin/news/${id}?error=${encodeURIComponent(uploadError.message)}`);
+    }
+
+    newPaths.push(objectPath);
   }
 
+  // Обновляем массив в БД
   const { error: updateError } = await supabase
     .from("news")
-    .update({ cover_image_path: objectPath })
+    .update({ image_paths: newPaths })
     .eq("id", id);
 
   if (updateError) {
     redirect(`/admin/news/${id}?error=${encodeURIComponent(updateError.message)}`);
   }
+
+  redirect(`/admin/news/${id}`);
+}
+
+export async function deleteNewsImage(id: string, imagePath: string) {
+  const supabase = await createSupabaseServerClient();
+
+  // Получаем текущий массив
+  const { data: news } = await supabase
+    .from("news")
+    .select("image_paths")
+    .eq("id", id)
+    .single();
+
+  const currentPaths = (news?.image_paths || []) as string[];
+  
+  // Удаляем путь из массива
+  const newPaths = currentPaths.filter(path => path !== imagePath);
+
+  // Удаляем файл из storage
+  await supabase.storage
+    .from(NEWS_COVER_BUCKET)
+    .remove([imagePath]);
+
+  // Обновляем массив в БД
+  await supabase
+    .from("news")
+    .update({ image_paths: newPaths })
+    .eq("id", id);
 
   redirect(`/admin/news/${id}`);
 }

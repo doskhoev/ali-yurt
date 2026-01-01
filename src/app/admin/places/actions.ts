@@ -100,37 +100,83 @@ export async function deletePlace(id: string) {
   redirect("/admin/places");
 }
 
-export async function uploadPlaceCover(id: string, formData: FormData) {
-  const file = formData.get("cover") as File | null;
-  if (!file || file.size === 0) {
-    redirect(`/admin/places/${id}?error=${encodeURIComponent("Файл не выбран")}`);
+export async function uploadPlaceImage(id: string, formData: FormData) {
+  const files = formData.getAll("images") as File[];
+  const validFiles = files.filter((file) => file && file.size > 0);
+
+  if (validFiles.length === 0) {
+    redirect(`/admin/places/${id}?error=${encodeURIComponent("Файлы не выбраны")}`);
   }
 
   const supabase = await createSupabaseServerClient();
 
-  const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-  const objectPath = `places/${id}/cover.${ext}`;
+  // Получаем текущий массив изображений
+  const { data: place } = await supabase
+    .from("places")
+    .select("image_paths")
+    .eq("id", id)
+    .single();
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const { error: uploadError } = await supabase.storage
-    .from(PLACE_COVER_BUCKET)
-    .upload(objectPath, bytes, {
-      contentType: file.type || "application/octet-stream",
-      upsert: true,
-    });
+  const currentPaths = (place?.image_paths || []) as string[];
+  const newPaths: string[] = [...currentPaths];
 
-  if (uploadError) {
-    redirect(`/admin/places/${id}?error=${encodeURIComponent(uploadError.message)}`);
+  // Загружаем все файлы
+  for (const file of validFiles) {
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+    const objectPath = `places/${id}/${crypto.randomUUID()}.${ext}`;
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: uploadError } = await supabase.storage
+      .from(PLACE_COVER_BUCKET)
+      .upload(objectPath, bytes, {
+        contentType: file.type || "application/octet-stream",
+      });
+
+    if (uploadError) {
+      redirect(`/admin/places/${id}?error=${encodeURIComponent(uploadError.message)}`);
+    }
+
+    newPaths.push(objectPath);
   }
 
+  // Обновляем массив в БД
   const { error: updateError } = await supabase
     .from("places")
-    .update({ cover_image_path: objectPath })
+    .update({ image_paths: newPaths })
     .eq("id", id);
 
   if (updateError) {
     redirect(`/admin/places/${id}?error=${encodeURIComponent(updateError.message)}`);
   }
+
+  redirect(`/admin/places/${id}`);
+}
+
+export async function deletePlaceImage(id: string, imagePath: string) {
+  const supabase = await createSupabaseServerClient();
+
+  // Получаем текущий массив
+  const { data: place } = await supabase
+    .from("places")
+    .select("image_paths")
+    .eq("id", id)
+    .single();
+
+  const currentPaths = (place?.image_paths || []) as string[];
+  
+  // Удаляем путь из массива
+  const newPaths = currentPaths.filter(path => path !== imagePath);
+
+  // Удаляем файл из storage
+  await supabase.storage
+    .from(PLACE_COVER_BUCKET)
+    .remove([imagePath]);
+
+  // Обновляем массив в БД
+  await supabase
+    .from("places")
+    .update({ image_paths: newPaths })
+    .eq("id", id);
 
   redirect(`/admin/places/${id}`);
 }

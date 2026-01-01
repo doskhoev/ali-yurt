@@ -9,7 +9,7 @@ import { FormCheckbox } from "@/components/FormCheckbox";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-type CategoryRow = { id: string; title: string };
+type CategoryRow = { id: string; title: string; icon_svg: string | null };
 
 export default async function AdminPlaceNewPage({
   searchParams,
@@ -22,7 +22,7 @@ export default async function AdminPlaceNewPage({
   const supabase = await createSupabaseServerClient();
   const { data: categories, error: catError } = await supabase
     .from("place_categories")
-    .select("id, title")
+    .select("id, title, icon_svg")
     .order("title", { ascending: true })
     .limit(500);
 
@@ -32,7 +32,7 @@ export default async function AdminPlaceNewPage({
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Новое место</h1>
-        <p className="text-sm text-zinc-600">Контент в Markdown.</p>
+        <p className="text-sm text-muted-foreground">Контент в Markdown.</p>
         {(error || catError) && (
           <p className="text-sm text-red-600">
             Ошибка: {decodeURIComponent(error ?? catError?.message ?? "")}
@@ -46,7 +46,7 @@ export default async function AdminPlaceNewPage({
             Категория <span className="text-red-600">*</span>
           </Label>
           {items.length === 0 ? (
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-muted-foreground">
               Сначала добавь категории в /admin/place-categories.
             </p>
           ) : (

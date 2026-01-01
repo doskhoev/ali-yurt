@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PLACE_COVER_BUCKET } from "@/lib/storage";
 import { getIsAdmin } from "@/lib/auth/admin";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 export const metadata: Metadata = {
   title: "Места",
@@ -19,7 +20,7 @@ type PlaceRow = {
   slug: string;
   title: string;
   category_id: string | null;
-  cover_image_path: string | null;
+  image_paths: string[];
   excerpt: string | null;
   published_at: string | null;
 };
@@ -30,7 +31,7 @@ export default async function PlacesIndexPage() {
 
   const query = supabase
     .from("places")
-    .select("id, slug, title, category_id, cover_image_path, excerpt, published_at")
+    .select("id, slug, title, category_id, image_paths, excerpt, published_at")
     .order("published_at", { ascending: false })
     .limit(30);
 
@@ -60,46 +61,51 @@ export default async function PlacesIndexPage() {
   const { data: categories } = categoryIds.length
     ? await supabase
         .from("place_categories")
-        .select("id, title")
+        .select("id, title, icon_svg")
         .in("id", categoryIds)
-    : { data: [] as { id: string; title: string }[] };
+    : { data: [] as { id: string; title: string; icon_svg: string | null }[] };
 
   const catTitleById = new Map<string, string>();
-  (categories ?? []).forEach((c) => catTitleById.set(c.id, c.title));
+  const catIconById = new Map<string, string | null>();
+  (categories ?? []).forEach((c) => {
+    catTitleById.set(c.id, c.title);
+    catIconById.set(c.id, c.icon_svg);
+  });
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Места</h1>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           {isAdmin ? "Админ видит все, включая черновики." : "Показаны только опубликованные."}
         </p>
       </header>
 
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-600">Пока нет опубликованных мест.</p>
+        <p className="text-sm text-muted-foreground">Пока нет опубликованных мест.</p>
       ) : (
         <ul className="space-y-4">
           {items.map((p) => {
-            const coverUrl = p.cover_image_path
+            const imagePaths = Array.isArray(p.image_paths) ? p.image_paths : [];
+            const firstImageUrl = imagePaths.length > 0
               ? supabase.storage
                   .from(PLACE_COVER_BUCKET)
-                  .getPublicUrl(p.cover_image_path).data.publicUrl
+                  .getPublicUrl(imagePaths[0]).data.publicUrl
               : null;
 
             return (
               <li
                 key={p.id}
                 className={`rounded-xl border overflow-hidden ${
-                  !p.published_at ? "bg-zinc-50 border-zinc-200 opacity-75" : ""
+                  !p.published_at ? "bg-muted/50 border-border opacity-75" : ""
                 }`}
               >
                 <Link href={`/places/${p.slug}`} className="block">
                   <div className="flex gap-4">
-                    {coverUrl && (
+                    {firstImageUrl && (
                       <div className="relative w-32 h-32 flex-shrink-0">
                         <Image
-                          src={coverUrl}
+                          src={firstImageUrl}
                           alt={p.title}
                           fill
                           className="object-cover"
@@ -110,18 +116,24 @@ export default async function PlacesIndexPage() {
                       <div className="flex items-center gap-2">
                         <div className="text-lg font-medium">{p.title}</div>
                         {!p.published_at && (
-                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
                             Черновик
                           </span>
                         )}
                       </div>
                       {p.category_id && catTitleById.get(p.category_id) && (
-                        <div className="text-xs text-zinc-500">
-                          {catTitleById.get(p.category_id)}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {catIconById.get(p.category_id) && (
+                            <CategoryIcon 
+                              svgCode={catIconById.get(p.category_id)!} 
+                              className="w-4 h-4 text-primary"
+                            />
+                          )}
+                          <span>{catTitleById.get(p.category_id)}</span>
                         </div>
                       )}
                       {p.excerpt && (
-                        <div className="text-sm text-zinc-600">{p.excerpt}</div>
+                        <div className="text-sm text-muted-foreground">{p.excerpt}</div>
                       )}
                     </div>
                   </div>
