@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Главная",
@@ -7,7 +11,28 @@ export const metadata: Metadata = {
     "Справочник жителя села Али-Юрт: новости, интересные места и объявления.",
 };
 
-export default function Home() {
+type SearchParams = Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
+  // Обработка кода авторизации, если он попал на главную страницу (fallback)
+  const resolvedSearchParams = await Promise.resolve(searchParams || {});
+  const codeParam = resolvedSearchParams?.code;
+  const code = Array.isArray(codeParam) ? codeParam[0] : codeParam;
+  
+  if (code) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (!error) {
+      // Успешная авторизация, редирект без параметра code
+      redirect("/");
+    }
+  }
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       <section className="space-y-2">
