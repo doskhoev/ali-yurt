@@ -29,7 +29,7 @@ export function CategoryIcon({ svgCode, className = "w-16 h-16 text-primary" }: 
     <div
       className={className}
       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-      dangerouslySetInnerHTML={{ __html: processedSvg.replace(/<svg/, '<svg style="width: 100%; height: 100%;"') }}
+      dangerouslySetInnerHTML={{ __html: processedSvg }}
     />
   );
 }

@@ -11,7 +11,7 @@ const accentColors = [
   { id: "default", name: "По умолчанию", color: "oklch(0.5 0 0)" },
   { id: "red", name: "Красный", color: "oklch(0.55 0.2 20)" },
   { id: "orange", name: "Оранжевый", color: "oklch(0.6 0.2 50)" },
-  { id: "yellow", name: "Желтый", color: "oklch(0.8 0.2 100)" },
+  { id: "yellow", name: "Желтый", color: "oklch(0.9 0.2 100)" },
   { id: "green", name: "Зеленый", color: "oklch(0.5 0.2 150)" },
   { id: "lightBlue", name: "Голубой", color: "oklch(0.6 0.2 220)" },
   { id: "blue", name: "Синий", color: "oklch(0.5 0.2 250)" },

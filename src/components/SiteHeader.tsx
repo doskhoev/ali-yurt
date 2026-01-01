@@ -52,7 +52,7 @@ export async function SiteHeader() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           {!user ? (
             <Link
               href="/login"
