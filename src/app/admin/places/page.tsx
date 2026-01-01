@@ -1,5 +1,10 @@
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/DeleteButton";
+import { deletePlace } from "./actions";
 
 type PlaceRow = {
   id: string;
@@ -53,34 +58,61 @@ export default async function AdminPlacesIndexPage() {
       ) : (
         <ul className="space-y-3">
           {items.map((p) => (
-            <li key={p.id} className="rounded-xl border p-4">
+            <li
+              key={p.id}
+              className={`rounded-xl border p-4 ${
+                !p.published_at ? "bg-zinc-50 border-zinc-200 opacity-75" : ""
+              }`}
+            >
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-medium">{p.title}</div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    {p.published_at ? (
+                      <Link
+                        href={`/places/${p.slug}`}
+                        className="font-medium hover:text-zinc-600 block"
+                      >
+                        {p.title}
+                      </Link>
+                    ) : (
+                      <div className="font-medium">{p.title}</div>
+                    )}
+                    {!p.published_at && (
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        Черновик
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-zinc-600">
                     slug: <span className="font-mono">{p.slug}</span>
                   </div>
                   <div className="text-xs text-zinc-600">
-                    обновлено: {formatDateTimeRu(p.updated_at)} · статус:{" "}
-                    {p.published_at ? "опубликовано" : "черновик"}
+                    обновлено: {formatDateTimeRu(p.updated_at)}
+                    {p.published_at && (
+                      <> · опубликовано: {formatDateTimeRu(p.published_at)}</>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/admin/places/${p.id}`}
-                    className="text-sm text-zinc-700 hover:text-black"
-                  >
-                    Редактировать
-                  </Link>
-                  {p.published_at && (
-                    <Link
-                      href={`/places/${p.slug}`}
-                      className="text-sm text-zinc-700 hover:text-black"
-                    >
-                      Открыть
-                    </Link>
-                  )}
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/admin/places/${p.id}`}>
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Редактировать</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <form action={deletePlace.bind(null, p.id)} id={`delete-place-list-${p.id}`}>
+                  </form>
+                  <DeleteButton
+                    formId={`delete-place-list-${p.id}`}
+                    description="Место будет удалено безвозвратно."
+                  />
                 </div>
               </div>
             </li>

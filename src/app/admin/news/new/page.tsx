@@ -1,4 +1,9 @@
 import { createNews } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { FormCheckbox } from "@/components/FormCheckbox";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,49 +26,47 @@ export default function AdminNewsNewPage({
       </header>
 
       <form action={createNews} className="space-y-4">
-        <label className="block space-y-1">
-          <span className="text-sm">Заголовок</span>
-          <input
-            name="title"
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="title">
+            Заголовок <span className="text-red-600">*</span>
+          </Label>
+          <Input id="title" name="title" required />
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">
-            Slug (опционально, иначе будет из заголовка)
-          </span>
-          <input name="slug" className="w-full rounded-md border px-3 py-2" />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="slug">Slug (иначе будет из заголовка)</Label>
+          <Input id="slug" name="slug" />
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">Короткое описание (excerpt)</span>
-          <textarea
-            name="excerpt"
-            rows={2}
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="excerpt">Короткое описание (excerpt)</Label>
+          <Textarea id="excerpt" name="excerpt" rows={2} />
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">Контент (Markdown)</span>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="content">
+            Контент (Markdown) <span className="text-red-600">*</span>
+          </Label>
+          <Textarea
+            id="content"
             name="content"
             required
             rows={14}
-            className="w-full rounded-md border px-3 py-2 font-mono text-sm"
+            className="font-mono text-sm"
           />
-        </label>
+        </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="publish" value="1" />
-          Опубликовать сразу
-        </label>
+        <div className="flex items-center space-x-2">
+          <FormCheckbox id="publish" name="publish" value="1" />
+          <Label
+            htmlFor="publish"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Опубликовать сразу
+          </Label>
+        </div>
 
-        <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
-          Создать
-        </button>
+        <Button type="submit">Создать</Button>
       </form>
     </main>
   );

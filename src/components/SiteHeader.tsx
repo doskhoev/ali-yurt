@@ -14,7 +14,7 @@ export async function SiteHeader() {
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between gap-4">
         <nav className="flex items-center gap-4">
           <Link href="/" className="font-semibold">
-            Ali-Yurt
+            Али-Юрт
           </Link>
           <Link href="/news" className="text-sm text-zinc-700 hover:text-black">
             Новости

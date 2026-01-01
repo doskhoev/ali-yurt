@@ -1,8 +1,17 @@
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createPlace } from "../actions";
+import { CategorySelect } from "@/components/CategorySelect";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { FormCheckbox } from "@/components/FormCheckbox";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-export default function AdminPlaceNewPage({
+type CategoryRow = { id: string; title: string };
+
+export default async function AdminPlaceNewPage({
   searchParams,
 }: {
   searchParams?: SearchParams;
@@ -10,60 +19,87 @@ export default function AdminPlaceNewPage({
   const errorParam = searchParams?.error;
   const error = Array.isArray(errorParam) ? errorParam[0] : errorParam;
 
+  const supabase = await createSupabaseServerClient();
+  const { data: categories, error: catError } = await supabase
+    .from("place_categories")
+    .select("id, title")
+    .order("title", { ascending: true })
+    .limit(500);
+
+  const items = ((categories ?? []) as CategoryRow[]).filter(Boolean);
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Новое место</h1>
         <p className="text-sm text-zinc-600">Контент в Markdown.</p>
-        {error && (
-          <p className="text-sm text-red-600">Ошибка: {decodeURIComponent(error)}</p>
+        {(error || catError) && (
+          <p className="text-sm text-red-600">
+            Ошибка: {decodeURIComponent(error ?? catError?.message ?? "")}
+          </p>
         )}
       </header>
 
       <form action={createPlace} className="space-y-4">
-        <label className="block space-y-1">
-          <span className="text-sm">Название</span>
-          <input
-            name="title"
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="category_id">
+            Категория <span className="text-red-600">*</span>
+          </Label>
+          {items.length === 0 ? (
+            <p className="text-xs text-zinc-600">
+              Сначала добавь категории в /admin/place-categories.
+            </p>
+          ) : (
+            <CategorySelect
+              name="category_id"
+              categories={items}
+              required
+              placeholder="Выберите категорию…"
+            />
+          )}
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">
-            Slug (опционально, иначе будет из названия)
-          </span>
-          <input name="slug" className="w-full rounded-md border px-3 py-2" />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="title">
+            Название <span className="text-red-600">*</span>
+          </Label>
+          <Input id="title" name="title" required />
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">Короткое описание (excerpt)</span>
-          <textarea
-            name="excerpt"
-            rows={2}
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="slug">Slug (иначе будет из названия)</Label>
+          <Input id="slug" name="slug" />
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm">Контент (Markdown)</span>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="excerpt">Короткое описание (excerpt)</Label>
+          <Textarea id="excerpt" name="excerpt" rows={2} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="content">
+            Контент (Markdown) <span className="text-red-600">*</span>
+          </Label>
+          <Textarea
+            id="content"
             name="content"
             required
             rows={14}
-            className="w-full rounded-md border px-3 py-2 font-mono text-sm"
+            className="font-mono text-sm"
           />
-        </label>
+        </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="publish" value="1" />
-          Опубликовать сразу
-        </label>
+        <div className="flex items-center space-x-2">
+          <FormCheckbox id="publish" name="publish" value="1" />
+          <Label
+            htmlFor="publish"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Опубликовать сразу
+          </Label>
+        </div>
 
-        <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
-          Создать
-        </button>
+        <Button type="submit">Создать</Button>
       </form>
     </main>
   );

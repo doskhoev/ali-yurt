@@ -24,6 +24,14 @@ export default function AdminHomePage() {
           <div className="font-medium">Места</div>
           <div className="text-sm text-zinc-600">Создание и публикация</div>
         </Link>
+
+        <Link
+          href="/admin/place-categories"
+          className="rounded-xl border p-5 hover:bg-zinc-50 transition-colors"
+        >
+          <div className="font-medium">Категории мест</div>
+          <div className="text-sm text-zinc-600">Справочник</div>
+        </Link>
       </section>
     </main>
   );

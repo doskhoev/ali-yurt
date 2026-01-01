@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/Markdown";
 import { createPlaceComment } from "./actions";
+import { PLACE_COVER_BUCKET } from "@/lib/storage";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +15,8 @@ type PlaceRow = {
   id: string;
   slug: string;
   title: string;
+  category_id: string | null;
+  cover_image_path: string | null;
   excerpt: string | null;
   content: string;
   published_at: string | null;
@@ -34,6 +42,68 @@ function formatDateTimeRu(iso: string) {
   }).format(dt);
 }
 
+async function getPlaceBySlug(slug: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("places")
+    .select("id, slug, title, category_id, cover_image_path, excerpt, content, published_at")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as PlaceRow;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string } | Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams.slug;
+  if (!slug) return {};
+
+  const place = await getPlaceBySlug(slug);
+  if (!place) return {};
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const url = `${siteUrl}/places/${place.slug}`;
+
+  const description =
+    place.excerpt ||
+    place.content.slice(0, 160).replace(/[#*`]/g, "").trim() ||
+    "Интересное место в селе Али-Юрт";
+
+  const supabase = await createSupabaseServerClient();
+  const coverUrl = place.cover_image_path
+    ? supabase.storage
+        .from(PLACE_COVER_BUCKET)
+        .getPublicUrl(place.cover_image_path).data.publicUrl
+    : null;
+
+  return {
+    title: place.title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title: place.title,
+      description,
+      url,
+      type: "article",
+      publishedTime: place.published_at || undefined,
+      images: coverUrl ? [{ url: coverUrl, alt: place.title }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: place.title,
+      description,
+      images: coverUrl ? [coverUrl] : undefined,
+    },
+  };
+}
+
 export default async function PlaceSlugPage({
   params,
 }: {
@@ -42,17 +112,25 @@ export default async function PlaceSlugPage({
   const resolvedParams = await Promise.resolve(params);
   const slug = resolvedParams.slug;
   if (!slug) notFound();
+
+  const item = await getPlaceBySlug(slug);
+  if (!item) notFound();
+
   const supabase = await createSupabaseServerClient();
 
-  const { data: place, error: placeError } = await supabase
-    .from("places")
-    .select("id, slug, title, excerpt, content, published_at")
-    .eq("slug", slug)
-    .maybeSingle();
+  const coverUrl = item.cover_image_path
+    ? supabase.storage
+        .from(PLACE_COVER_BUCKET)
+        .getPublicUrl(item.cover_image_path).data.publicUrl
+    : null;
 
-  if (placeError || !place) notFound();
-
-  const item = place as PlaceRow;
+  const { data: category } = item.category_id
+    ? await supabase
+        .from("place_categories")
+        .select("id, title")
+        .eq("id", item.category_id)
+        .maybeSingle()
+    : { data: null as null | { id: string; title: string } };
 
   const { data: authData } = await supabase.auth.getUser();
   const user = authData.user;
@@ -62,7 +140,7 @@ export default async function PlaceSlugPage({
     .select("id, author_id, body, created_at")
     .eq("entity_type", "place")
     .eq("entity_id", item.id)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: true })
     .limit(100);
 
   const comments = ((commentsData ?? []) as CommentRow[]).filter(Boolean);
@@ -88,8 +166,23 @@ export default async function PlaceSlugPage({
               {formatDateTimeRu(item.published_at)}
             </div>
           )}
-          {item.excerpt && <p className="text-zinc-700">{item.excerpt}</p>}
+          {category?.title && (
+            <div className="text-sm text-zinc-600">Категория: {category.title}</div>
+          )}
         </header>
+
+        {coverUrl && (
+          <div className="flex justify-center">
+            <Image
+              src={coverUrl}
+              alt={item.title}
+              width={800}
+              height={400}
+              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
+              style={{ height: "auto" }}
+            />
+          </div>
+        )}
 
         <Markdown value={item.content} />
       </article>
@@ -101,32 +194,6 @@ export default async function PlaceSlugPage({
           <p className="text-sm text-red-600">
             Ошибка загрузки комментариев: {commentsError.message}
           </p>
-        )}
-
-        {!user ? (
-          <p className="text-sm text-zinc-600">
-            Чтобы оставить комментарий, войдите в аккаунт.
-          </p>
-        ) : (
-          <form action={createPlaceComment} className="space-y-3">
-            <input type="hidden" name="entity_id" value={item.id} />
-            <label className="block space-y-1">
-              <span className="text-sm text-zinc-700">Ваш комментарий</span>
-              <textarea
-                name="body"
-                required
-                rows={3}
-                className="w-full rounded-md border px-3 py-2"
-                placeholder="Напишите комментарий…"
-              />
-            </label>
-            <button
-              type="submit"
-              className="rounded-md bg-black px-4 py-2 text-white"
-            >
-              Отправить
-            </button>
-          </form>
         )}
 
         {comments.length === 0 ? (
@@ -154,6 +221,27 @@ export default async function PlaceSlugPage({
               );
             })}
           </ul>
+        )}
+
+        {!user ? (
+          <p className="text-sm text-zinc-600">
+            Чтобы оставить комментарий, войдите в аккаунт.
+          </p>
+        ) : (
+                <form action={createPlaceComment} className="space-y-3">
+                  <input type="hidden" name="entity_id" value={item.id} />
+                  <div className="space-y-2">
+                    <Label htmlFor="body">Ваш комментарий</Label>
+                    <Textarea
+                      id="body"
+                      name="body"
+                      required
+                      rows={3}
+                      placeholder="Напишите комментарий…"
+                    />
+                  </div>
+                  <Button type="submit">Отправить</Button>
+                </form>
         )}
       </section>
     </main>

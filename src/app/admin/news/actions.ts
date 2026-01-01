@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/slug";
+import { NEWS_COVER_BUCKET } from "@/lib/storage";
 
 export async function createNews(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -79,6 +80,52 @@ export async function updateNews(id: string, formData: FormData) {
 
   if (error) {
     redirect(`/admin/news/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect("/admin/news");
+}
+
+export async function deleteNews(id: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("news").delete().eq("id", id);
+
+  if (error) {
+    redirect(`/admin/news/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect("/admin/news");
+}
+
+export async function uploadNewsCover(id: string, formData: FormData) {
+  const file = formData.get("cover") as File | null;
+  if (!file || file.size === 0) {
+    redirect(`/admin/news/${id}?error=${encodeURIComponent("Файл не выбран")}`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+  const objectPath = `news/${id}/cover.${ext}`;
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const { error: uploadError } = await supabase.storage
+    .from(NEWS_COVER_BUCKET)
+    .upload(objectPath, bytes, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    redirect(`/admin/news/${id}?error=${encodeURIComponent(uploadError.message)}`);
+  }
+
+  const { error: updateError } = await supabase
+    .from("news")
+    .update({ cover_image_path: objectPath })
+    .eq("id", id);
+
+  if (updateError) {
+    redirect(`/admin/news/${id}?error=${encodeURIComponent(updateError.message)}`);
   }
 
   redirect(`/admin/news/${id}`);

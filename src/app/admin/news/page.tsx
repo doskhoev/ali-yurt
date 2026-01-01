@@ -1,5 +1,10 @@
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DeleteButton } from "@/components/DeleteButton";
+import { deleteNews } from "./actions";
 
 type NewsRow = {
   id: string;
@@ -53,34 +58,61 @@ export default async function AdminNewsIndexPage() {
       ) : (
         <ul className="space-y-3">
           {items.map((n) => (
-            <li key={n.id} className="rounded-xl border p-4">
+            <li
+              key={n.id}
+              className={`rounded-xl border p-4 ${
+                !n.published_at ? "bg-zinc-50 border-zinc-200 opacity-75" : ""
+              }`}
+            >
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-medium">{n.title}</div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    {n.published_at ? (
+                      <Link
+                        href={`/news/${n.slug}`}
+                        className="font-medium hover:text-zinc-600 block"
+                      >
+                        {n.title}
+                      </Link>
+                    ) : (
+                      <div className="font-medium">{n.title}</div>
+                    )}
+                    {!n.published_at && (
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        Черновик
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-zinc-600">
                     slug: <span className="font-mono">{n.slug}</span>
                   </div>
                   <div className="text-xs text-zinc-600">
-                    обновлено: {formatDateTimeRu(n.updated_at)} · статус:{" "}
-                    {n.published_at ? "опубликовано" : "черновик"}
+                    обновлено: {formatDateTimeRu(n.updated_at)}
+                    {n.published_at && (
+                      <> · опубликовано: {formatDateTimeRu(n.published_at)}</>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/admin/news/${n.id}`}
-                    className="text-sm text-zinc-700 hover:text-black"
-                  >
-                    Редактировать
-                  </Link>
-                  {n.published_at && (
-                    <Link
-                      href={`/news/${n.slug}`}
-                      className="text-sm text-zinc-700 hover:text-black"
-                    >
-                      Открыть
-                    </Link>
-                  )}
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/admin/news/${n.id}`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Редактировать</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <form action={deleteNews.bind(null, n.id)} id={`delete-news-list-${n.id}`}>
+                  </form>
+                  <DeleteButton
+                    formId={`delete-news-list-${n.id}`}
+                    description="Новость будет удалена безвозвратно."
+                  />
                 </div>
               </div>
             </li>

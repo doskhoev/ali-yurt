@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/Markdown";
 import { createNewsComment } from "./actions";
+import { NEWS_COVER_BUCKET } from "@/lib/storage";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +15,7 @@ type NewsRow = {
   id: string;
   slug: string;
   title: string;
+  cover_image_path: string | null;
   excerpt: string | null;
   content: string;
   published_at: string | null;
@@ -34,6 +41,67 @@ function formatDateTimeRu(iso: string) {
   }).format(dt);
 }
 
+async function getNewsBySlug(slug: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("news")
+    .select("id, slug, title, cover_image_path, excerpt, content, published_at")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as NewsRow;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string } | Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams.slug;
+  if (!slug) return {};
+
+  const article = await getNewsBySlug(slug);
+  if (!article) return {};
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const url = `${siteUrl}/news/${article.slug}`;
+
+  const description =
+    article.excerpt ||
+    article.content.slice(0, 160).replace(/[#*`]/g, "").trim() ||
+    "Новость из справочника жителя Али-Юрт";
+
+  const coverUrl = article.cover_image_path
+    ? (await createSupabaseServerClient()).storage
+        .from(NEWS_COVER_BUCKET)
+        .getPublicUrl(article.cover_image_path).data.publicUrl
+    : null;
+
+  return {
+    title: article.title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title: article.title,
+      description,
+      url,
+      type: "article",
+      publishedTime: article.published_at || undefined,
+      images: coverUrl ? [{ url: coverUrl, alt: article.title }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: coverUrl ? [coverUrl] : undefined,
+    },
+  };
+}
+
 export default async function NewsSlugPage({
   params,
 }: {
@@ -42,17 +110,17 @@ export default async function NewsSlugPage({
   const resolvedParams = await Promise.resolve(params);
   const slug = resolvedParams.slug;
   if (!slug) notFound();
+
+  const article = await getNewsBySlug(slug);
+  if (!article) notFound();
+
   const supabase = await createSupabaseServerClient();
 
-  const { data: news, error: newsError } = await supabase
-    .from("news")
-    .select("id, slug, title, excerpt, content, published_at")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (newsError || !news) notFound();
-
-  const article = news as NewsRow;
+  const coverUrl = article.cover_image_path
+    ? supabase.storage
+        .from(NEWS_COVER_BUCKET)
+        .getPublicUrl(article.cover_image_path).data.publicUrl
+    : null;
 
   const { data: authData } = await supabase.auth.getUser();
   const user = authData.user;
@@ -62,7 +130,7 @@ export default async function NewsSlugPage({
     .select("id, author_id, body, created_at")
     .eq("entity_type", "news")
     .eq("entity_id", article.id)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: true })
     .limit(100);
 
   const comments = ((commentsData ?? []) as CommentRow[]).filter(Boolean);
@@ -90,10 +158,20 @@ export default async function NewsSlugPage({
               {formatDateTimeRu(article.published_at)}
             </div>
           )}
-          {article.excerpt && (
-            <p className="text-zinc-700">{article.excerpt}</p>
-          )}
         </header>
+
+        {coverUrl && (
+          <div className="flex justify-center">
+            <Image
+              src={coverUrl}
+              alt={article.title}
+              width={800}
+              height={400}
+              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
+              style={{ height: "auto" }}
+            />
+          </div>
+        )}
 
         <Markdown value={article.content} />
       </article>
@@ -105,32 +183,6 @@ export default async function NewsSlugPage({
           <p className="text-sm text-red-600">
             Ошибка загрузки комментариев: {commentsError.message}
           </p>
-        )}
-
-        {!user ? (
-          <p className="text-sm text-zinc-600">
-            Чтобы оставить комментарий, войдите в аккаунт.
-          </p>
-        ) : (
-          <form action={createNewsComment} className="space-y-3">
-            <input type="hidden" name="entity_id" value={article.id} />
-            <label className="block space-y-1">
-              <span className="text-sm text-zinc-700">Ваш комментарий</span>
-              <textarea
-                name="body"
-                required
-                rows={3}
-                className="w-full rounded-md border px-3 py-2"
-                placeholder="Напишите комментарий…"
-              />
-            </label>
-            <button
-              type="submit"
-              className="rounded-md bg-black px-4 py-2 text-white"
-            >
-              Отправить
-            </button>
-          </form>
         )}
 
         {comments.length === 0 ? (
@@ -158,6 +210,27 @@ export default async function NewsSlugPage({
               );
             })}
           </ul>
+        )}
+
+        {!user ? (
+          <p className="text-sm text-zinc-600">
+            Чтобы оставить комментарий, войдите в аккаунт.
+          </p>
+        ) : (
+                <form action={createNewsComment} className="space-y-3">
+                  <input type="hidden" name="entity_id" value={article.id} />
+                  <div className="space-y-2">
+                    <Label htmlFor="body">Ваш комментарий</Label>
+                    <Textarea
+                      id="body"
+                      name="body"
+                      required
+                      rows={3}
+                      placeholder="Напишите комментарий…"
+                    />
+                  </div>
+                  <Button type="submit">Отправить</Button>
+                </form>
         )}
       </section>
     </main>

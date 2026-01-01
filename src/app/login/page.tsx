@@ -1,4 +1,7 @@
 import { signInWithOtp } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,24 +24,19 @@ export default function LoginPage({
       )}
 
       <form action={signInWithOtp} className="space-y-3">
-        <label className="block space-y-1">
-          <span className="text-sm">Email</span>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             name="email"
             type="email"
             required
-            className="w-full rounded-md border px-3 py-2"
             placeholder="you@example.com"
             autoComplete="email"
           />
-        </label>
+        </div>
 
-        <button
-          type="submit"
-          className="rounded-md bg-black px-4 py-2 text-white"
-        >
-          Отправить ссылку
-        </button>
+        <Button type="submit">Отправить ссылку</Button>
       </form>
     </main>
   );

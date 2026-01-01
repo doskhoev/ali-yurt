@@ -1,10 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Главная",
+  description:
+    "Справочник жителя села Али-Юрт: новости, интересные места и объявления.",
+};
 
 export default function Home() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Ali-Yurt</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Али-Юрт</h1>
         <p className="text-zinc-600">
           Черновой каркас: новости и интересные места. Комментарии доступны
           зарегистрированным.
