@@ -57,7 +57,7 @@ export function TopLoadingBar() {
   if (!loading) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-0.25 bg-primary/20">
+    <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-primary/20">
       <div 
         className="h-full bg-primary"
         style={{

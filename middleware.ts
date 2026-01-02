@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
   response = setPathnameHeader(response);
 
   // Пропускаем проверку для публичных путей
-  const publicPaths = ["/login", "/auth/callback", "/setup-username"];
+  const publicPaths = ["/login", "/auth/callback", "/setup-username", "/icon", "/icon.svg"];
   if (publicPaths.includes(pathname)) {
     return response;
   }
