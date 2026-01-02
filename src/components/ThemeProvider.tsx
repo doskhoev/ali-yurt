@@ -10,7 +10,7 @@ const ACCENT_STORAGE_KEY = "ali-yurt-accent";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
-  const [theme, setTheme] = React.useState<Theme>("light");
+  const [theme, setTheme] = React.useState<Theme>("dark");
   const [accentColor, setAccentColor] = React.useState<AccentColor>("green");
 
   React.useEffect(() => {
@@ -80,7 +80,7 @@ const ThemeContext = React.createContext<{
   updateTheme: (theme: Theme) => void;
   updateAccentColor: (accent: AccentColor) => void;
 }>({
-  theme: "light",
+  theme: "dark",
   accentColor: "green",
   updateTheme: () => { },
   updateAccentColor: () => { },

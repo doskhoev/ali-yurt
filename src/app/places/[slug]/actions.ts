@@ -40,8 +40,22 @@ export async function deleteComment(commentId: string) {
     redirect("/login");
   }
 
+  // Проверяем, является ли пользователь автором комментария
+  const { data: comment } = await supabase
+    .from("comments")
+    .select("author_id")
+    .eq("id", commentId)
+    .single();
+
+  if (!comment) {
+    redirect("/");
+  }
+
   const isAdmin = await getIsAdmin();
-  if (!isAdmin) {
+  const isAuthor = comment.author_id === user.id;
+
+  // Разрешаем удаление только автору или админу
+  if (!isAuthor && !isAdmin) {
     redirect("/");
   }
 

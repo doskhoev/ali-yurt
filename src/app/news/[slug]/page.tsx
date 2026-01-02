@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { getIsAdmin } from "@/lib/auth/admin";
-import { Trash2 } from "lucide-react";
+import { DeleteButton } from "@/components/DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -202,17 +202,15 @@ export default async function NewsSlugPage({
                       <div className="text-xs text-muted-foreground">
                         {formatDateTimeRu(c.created_at)}
                       </div>
-                      {isAdmin && (
-                        <form action={deleteComment.bind(null, c.id)} className="inline">
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </form>
+                      {(isAdmin || user?.id === c.author_id) && (
+                        <>
+                          <form id={`delete-comment-${c.id}`} action={deleteComment.bind(null, c.id)} className="hidden" />
+                          <DeleteButton
+                            formId={`delete-comment-${c.id}`}
+                            title="Удалить комментарий"
+                            description="Вы уверены, что хотите удалить этот комментарий? Это действие нельзя отменить."
+                          />
+                        </>
                       )}
                     </div>
                   </div>
