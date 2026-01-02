@@ -3,7 +3,8 @@ import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { deleteNews, updateNews, uploadNewsImage, deleteNewsImage } from "../actions";
 import { NEWS_COVER_BUCKET } from "@/lib/storage";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/SubmitButton";
+import { ViewOnSiteButton } from "@/components/ViewOnSiteButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -126,9 +127,9 @@ export default async function AdminNewsEditPage({
                     />
                   </div>
                   <form action={deleteNewsImage.bind(null, item.id, imagePath)} className="flex justify-center">
-                    <Button type="submit" variant="destructive" size="sm">
+                    <SubmitButton variant="destructive" size="sm">
                       Удалить изображение
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </div>
               );
@@ -154,9 +155,9 @@ export default async function AdminNewsEditPage({
               required
             />
           </div>
-          <Button type="submit" variant="outline" size="sm">
+          <SubmitButton variant="outline" size="sm">
             Загрузить
-          </Button>
+          </SubmitButton>
         </form>
         <p className="text-xs text-muted-foreground">
           Можно выбрать несколько файлов. Файлы загрузятся в Supabase Storage bucket{" "}
@@ -224,14 +225,9 @@ export default async function AdminNewsEditPage({
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Button type="submit">Сохранить</Button>
+            <SubmitButton>Сохранить</SubmitButton>
             {item.published_at && (
-              <Link
-                href={`/news/${item.slug}`}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Открыть на сайте →
-              </Link>
+              <ViewOnSiteButton href={`/news/${item.slug}`} />
             )}
           </div>
           <DeleteButton

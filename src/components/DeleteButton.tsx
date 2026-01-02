@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Trash2 } from "lucide-react";
+import { useTransition } from "react";
+import { Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -31,11 +32,15 @@ export function DeleteButton({
   title = "Удалить",
   description = "Это действие нельзя отменить.",
 }: DeleteButtonProps) {
+  const [isPending, startTransition] = useTransition();
+
   const handleDelete = () => {
-    const form = document.getElementById(formId) as HTMLFormElement;
-    if (form) {
-      form.requestSubmit();
-    }
+    startTransition(() => {
+      const form = document.getElementById(formId) as HTMLFormElement;
+      if (form) {
+        form.requestSubmit();
+      }
+    });
   };
 
   return (
@@ -43,8 +48,17 @@ export function DeleteButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-muted-foreground hover:text-destructive"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
             </Button>
           </AlertDialogTrigger>
         </TooltipTrigger>
@@ -59,11 +73,13 @@ export function DeleteButton({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Отмена</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Отмена</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
+            disabled={isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
           >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {title}
           </AlertDialogAction>
         </AlertDialogFooter>

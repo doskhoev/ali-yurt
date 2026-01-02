@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+import { EditButton } from "@/components/EditButton";
 import { DeleteButton } from "@/components/DeleteButton";
+import { AddButton } from "@/components/AddButton";
 import { deletePlace } from "./actions";
 
 type PlaceRow = {
@@ -45,9 +44,7 @@ export default async function AdminPlacesIndexPage() {
           )}
         </div>
 
-        <Button asChild>
-          <Link href="/admin/places/new">+ Место</Link>
-        </Button>
+        <AddButton href="/admin/places/new">Место</AddButton>
       </header>
 
       {items.length === 0 ? (
@@ -92,18 +89,7 @@ export default async function AdminPlacesIndexPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
-                        <Link href={`/admin/places/${p.id}`}>
-                          <Pencil className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Редактировать</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <EditButton href={`/admin/places/${p.id}`} />
                   <form action={deletePlace.bind(null, p.id)} id={`delete-place-list-${p.id}`}>
                   </form>
                   <DeleteButton

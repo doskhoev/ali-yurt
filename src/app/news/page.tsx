@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NEWS_COVER_BUCKET } from "@/lib/storage";
 import { getIsAdmin } from "@/lib/auth/admin";
@@ -25,6 +26,23 @@ type NewsRow = {
 
 export default async function NewsIndexPage() {
   const supabase = await createSupabaseServerClient();
+  
+  // Проверяем, нужно ли редиректить на установку username
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // Если профиля нет или username не установлен, редиректим
+    const hasUsername = profile?.username && profile.username.trim().length > 0;
+    if (!hasUsername) {
+      redirect("/setup-username");
+    }
+  }
+  
   const isAdmin = await getIsAdmin();
 
   const query = supabase

@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createPlace } from "../actions";
 import { CategorySelect } from "@/components/CategorySelect";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -99,7 +99,7 @@ export default async function AdminPlaceNewPage({
           </Label>
         </div>
 
-        <Button type="submit">Создать</Button>
+        <SubmitButton>Создать</SubmitButton>
       </form>
     </main>
   );

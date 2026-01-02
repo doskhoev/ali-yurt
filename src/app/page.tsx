@@ -28,8 +28,43 @@ export default async function Home({
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error) {
+      // После успешной авторизации проверяем, есть ли профиль
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        // Если профиля нет, создаем его (без username, он установится позже)
+        if (!profile) {
+          await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              email: user.email || null,
+            });
+        }
+      }
       // Успешная авторизация, редирект без параметра code
       redirect("/");
+    }
+  }
+
+  // Проверяем, нужно ли редиректить на установку username
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // Если профиля нет или username не установлен, редиректим
+    if (!profile || !profile.username) {
+      redirect("/setup-username");
     }
   }
 

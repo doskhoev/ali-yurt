@@ -4,16 +4,12 @@ import {
   deletePlaceCategory,
 } from "./actions";
 import Link from "next/link";
+import { SubmitButton } from "@/components/SubmitButton";
+import { EditButton } from "@/components/EditButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Pencil } from "lucide-react";
 import { DeleteButton } from "@/components/DeleteButton";
 import { CategoryIcon } from "@/components/CategoryIcon";
 
@@ -89,18 +85,7 @@ export default async function AdminPlaceCategoriesPage({
                     </div>
                   </div>
                   <div className="flex items-start gap-2 pt-0">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
-                          <Link href={`/admin/place-categories/${c.id}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Редактировать</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <EditButton href={`/admin/place-categories/${c.id}`} />
 
                     <form action={deletePlaceCategory.bind(null, c.id)} id={`delete-category-list-${c.id}`}>
                     </form>
@@ -147,7 +132,7 @@ export default async function AdminPlaceCategoriesPage({
           </div>
 
           <div className="sm:col-span-2">
-            <Button type="submit">Создать</Button>
+            <SubmitButton>Создать</SubmitButton>
           </div>
         </form>
       </section>

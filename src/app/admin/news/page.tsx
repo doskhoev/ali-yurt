@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EditButton } from "@/components/EditButton";
 import { DeleteButton } from "@/components/DeleteButton";
+import { AddButton } from "@/components/AddButton";
 import { deleteNews } from "./actions";
 
 type NewsRow = {
@@ -45,9 +44,7 @@ export default async function AdminNewsIndexPage() {
           )}
         </div>
 
-        <Button asChild>
-          <Link href="/admin/news/new">+ Новость</Link>
-        </Button>
+        <AddButton href="/admin/news/new">Новость</AddButton>
       </header>
 
       {items.length === 0 ? (
@@ -92,18 +89,7 @@ export default async function AdminNewsIndexPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
-                        <Link href={`/admin/news/${n.id}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Редактировать</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <EditButton href={`/admin/news/${n.id}`} />
                   <form action={deleteNews.bind(null, n.id)} id={`delete-news-list-${n.id}`}>
                   </form>
                   <DeleteButton

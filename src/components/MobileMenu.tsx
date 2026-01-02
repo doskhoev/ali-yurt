@@ -17,9 +17,10 @@ import { Settings } from "lucide-react";
 type MobileMenuProps = {
   isAdmin: boolean;
   user: { email?: string | null } | null | undefined;
+  username: string | null;
 };
 
-export function MobileMenu({ isAdmin, user }: MobileMenuProps) {
+export function MobileMenu({ isAdmin, user, username }: MobileMenuProps) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -84,7 +85,7 @@ export function MobileMenu({ isAdmin, user }: MobileMenuProps) {
             ) : (
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">
-                  {user.email}
+                  {username || user.email}
                 </div>
                 <Link
                   href="/settings"

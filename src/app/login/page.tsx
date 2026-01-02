@@ -1,5 +1,5 @@
 import { signInWithOtp } from "./actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +44,7 @@ export default async function LoginPage({
           />
         </div>
 
-        <Button type="submit">Отправить ссылку</Button>
+        <SubmitButton>Отправить ссылку</SubmitButton>
       </form>
     </main>
   );

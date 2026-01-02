@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
-import { SiteHeader } from "@/components/SiteHeader";
+import { ConditionalHeader } from "@/components/ConditionalHeader";
+import { HeaderHider } from "@/components/HeaderHider";
 import { Providers } from "@/components/providers";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +33,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const showHeader = pathname !== "/setup-username";
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
@@ -68,7 +75,10 @@ export default function RootLayout({
       >
         <Providers>
           <div className="min-h-dvh bg-background text-foreground">
-            <SiteHeader />
+            <Suspense fallback={null}>
+              <ConditionalHeader />
+            </Suspense>
+            <HeaderHider />
             {children}
           </div>
         </Providers>

@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Markdown } from "@/components/Markdown";
 import { createPlaceComment, deleteComment } from "./actions";
 import { PLACE_COVER_BUCKET } from "@/lib/storage";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -34,7 +34,7 @@ type CommentRow = {
 
 type ProfileRow = {
   id: string;
-  display_name: string | null;
+  username: string | null;
 };
 
 function formatDateTimeRu(iso: string) {
@@ -147,7 +147,7 @@ export default async function PlaceSlugPage({
   const { data: profilesData } = authorIds.length
     ? await supabase
         .from("profiles")
-        .select("id, display_name")
+        .select("id, username")
         .in("id", authorIds)
     : { data: [] as ProfileRow[] };
 
@@ -211,8 +211,8 @@ export default async function PlaceSlugPage({
           <ul className="space-y-3">
             {comments.map((c) => {
               const profile = profileById.get(c.author_id);
-              const authorLabel = profile?.display_name?.trim()
-                ? profile.display_name
+              const authorLabel = profile?.username?.trim()
+                ? profile.username
                 : "Пользователь";
 
               return (
@@ -261,7 +261,7 @@ export default async function PlaceSlugPage({
                       placeholder="Напишите комментарий…"
                     />
                   </div>
-                  <Button type="submit">Отправить</Button>
+                  <SubmitButton>Отправить</SubmitButton>
                 </form>
         )}
       </section>

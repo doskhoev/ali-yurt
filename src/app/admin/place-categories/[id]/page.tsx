@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { deletePlaceCategory, updatePlaceCategory } from "../actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -135,7 +135,7 @@ export default async function AdminPlaceCategoryEditPage({
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <Button type="submit">Сохранить</Button>
+          <SubmitButton>Сохранить</SubmitButton>
           <DeleteButton
             formId={`delete-category-${item.id}`}
             description="Категория будет удалена безвозвратно."

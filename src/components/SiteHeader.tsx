@@ -20,11 +20,22 @@ export async function SiteHeader() {
   const user = data.user;
   const isAdmin = user ? await getIsAdmin() : false;
 
+  // Получаем username из профиля
+  let username: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .maybeSingle();
+    username = profile?.username || null;
+  }
+
   return (
     <header className="border-b border-border bg-background">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-12">
-          <MobileMenu isAdmin={isAdmin} user={user} />
+          <MobileMenu isAdmin={isAdmin} user={user} username={username} />
           <Link href="/" className="font-semibold">
             Али-Юрт
           </Link>
@@ -65,16 +76,22 @@ export async function SiteHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{user.email}</span>
+                  <span className="hidden sm:inline">{username || user.email}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">Аккаунт</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                    {username ? (
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {username}
+                      </p>
+                    ) : (
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
