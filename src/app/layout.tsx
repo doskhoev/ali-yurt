@@ -27,7 +27,8 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
   ),
   icons: {
-    icon: "/icon.svg",
+    icon: [{ url: "/icon", type: "image/svg+xml" }],
+    shortcut: [{ url: "/icon", type: "image/svg+xml" }],
   },
   openGraph: {
     type: "website",
@@ -56,7 +57,7 @@ export default async function RootLayout({
                 const accent = localStorage.getItem('ali-yurt-accent') || 'green';
                 const root = document.documentElement;
                 
-                // Синхронизируем с cookies для использования в route handlers
+                // Синхронизируем с cookies для использования в route handler /icon
                 document.cookie = 'ali-yurt-theme=' + theme + '; path=/; max-age=31536000';
                 document.cookie = 'ali-yurt-accent=' + accent + '; path=/; max-age=31536000';
                 
@@ -66,44 +67,23 @@ export default async function RootLayout({
                 
                 if (theme === 'system') {
                   const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  document.cookie = 'ali-yurt-theme-resolved=' + systemTheme + '; path=/; max-age=31536000';
                   if (systemTheme === 'dark') {
                     root.classList.add('dark');
                   }
                 } else if (theme === 'dark') {
+                  document.cookie = 'ali-yurt-theme-resolved=dark; path=/; max-age=31536000';
                   root.classList.add('dark');
+                } else {
+                  document.cookie = 'ali-yurt-theme-resolved=light; path=/; max-age=31536000';
                 }
-                
-                // Обновляем favicon сразу при загрузке страницы
-                const accentColors = {
-                  default: { light: "#0f172a", dark: "#0f172a" },
-                  blue: { light: "#3b82f6", dark: "#60a5fa" },
-                  green: { light: "#22c55e", dark: "#4ade80" },
-                  purple: { light: "#a855f7", dark: "#c084fc" },
-                  orange: { light: "#f97316", dark: "#fb923c" },
-                  red: { light: "#ef4444", dark: "#f87171" },
-                  pink: { light: "#ec4899", dark: "#f472b6" },
-                  yellow: { light: "#eab308", dark: "#facc15" },
-                  lightBlue: { light: "#38bdf8", dark: "#60a5fa" },
-                };
-                
-                const isDark = theme === 'dark' || 
-                  (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                
-                const color = accentColors[accent] || accentColors.green;
-                const fillColor = isDark ? color.dark : color.light;
-                
-                const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="' + fillColor + '" /><path d="M35 80 V35 L42 25 H58 L65 35 V80 H35Z" fill="white" /><rect x="45" y="45" width="10" height="15" rx="5" fill="' + fillColor + '" /></svg>';
-                
-                const blob = new Blob([svg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                
-                let link = document.querySelector('link[rel="icon"]');
-                if (!link) {
-                  link = document.createElement('link');
-                  link.rel = 'icon';
-                  document.head.appendChild(link);
+
+                // Обновляем favicon (без fetch и без data: URL) — просто дергаем /icon с bust-параметром
+                var t = Date.now();
+                var link = document.querySelector('link[rel="icon"]');
+                if (link) {
+                  link.setAttribute('href', '/icon?t=' + t);
                 }
-                link.href = url;
               })();
             `,
           }}
