@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NEWS_COVER_BUCKET } from "@/lib/storage";
 import { EditButton } from "@/components/EditButton";
 import { DeleteButton } from "@/components/DeleteButton";
 import { AddButton } from "@/components/AddButton";
@@ -9,6 +11,7 @@ type NewsRow = {
   id: string;
   slug: string;
   title: string;
+  image_paths: string[];
   published_at: string | null;
   updated_at: string;
 };
@@ -25,7 +28,7 @@ export default async function AdminNewsIndexPage() {
   const supabase = await createSupabaseServerClient();
   const { data: rows, error } = await supabase
     .from("news")
-    .select("id, slug, title, published_at, updated_at")
+    .select("id, slug, title, image_paths, published_at, updated_at")
     .order("updated_at", { ascending: false })
     .limit(200);
 
@@ -51,15 +54,33 @@ export default async function AdminNewsIndexPage() {
         <p className="text-sm text-muted-foreground">Пока нет новостей.</p>
       ) : (
         <ul className="space-y-3">
-          {items.map((n) => (
-            <li
-              key={n.id}
-              className={`rounded-xl border p-4 ${
-                !n.published_at ? "bg-muted/50 border-border opacity-75" : ""
-              }`}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1 flex-1">
+          {items.map((n) => {
+            const imagePaths = Array.isArray(n.image_paths) ? n.image_paths : [];
+            const firstImageUrl = imagePaths.length > 0
+              ? supabase.storage
+                  .from(NEWS_COVER_BUCKET)
+                  .getPublicUrl(imagePaths[0]).data.publicUrl
+              : null;
+
+            return (
+              <li
+                key={n.id}
+                className={`rounded-xl border p-4 ${
+                  !n.published_at ? "bg-muted/50 border-border opacity-75" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  {firstImageUrl && (
+                    <div className="relative w-32 h-32 flex-shrink-0">
+                      <Image
+                        src={firstImageUrl}
+                        alt={n.title}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2">
                     {n.published_at ? (
                       <Link
@@ -99,7 +120,8 @@ export default async function AdminNewsIndexPage() {
                 </div>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </main>

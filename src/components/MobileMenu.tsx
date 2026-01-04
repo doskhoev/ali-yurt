@@ -64,6 +64,15 @@ export function MobileMenu({ isAdmin, user, username }: MobileMenuProps) {
           >
             О селе
           </Link>
+          {user && (
+            <Link
+              href="/feedback"
+              onClick={() => setOpen(false)}
+              className="text-base text-muted-foreground hover:text-foreground"
+            >
+              Обратная связь
+            </Link>
+          )}
           {isAdmin && (
             <Link
               href="/admin"

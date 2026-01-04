@@ -32,6 +32,14 @@ export default function AdminHomePage() {
           <div className="font-medium">Категории мест</div>
           <div className="text-sm text-muted-foreground">Справочник</div>
         </Link>
+
+        <Link
+          href="/admin/feedback"
+          className="rounded-xl border p-5 hover:bg-muted transition-colors"
+        >
+          <div className="font-medium">Обратная связь</div>
+          <div className="text-sm text-muted-foreground">Сообщения от пользователей</div>
+        </Link>
       </section>
     </main>
   );

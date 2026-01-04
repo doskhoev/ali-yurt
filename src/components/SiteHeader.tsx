@@ -55,6 +55,14 @@ export async function SiteHeader() {
             >
               О селе
             </Link>
+            {user && (
+              <Link
+                href="/feedback"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                Обратная связь
+              </Link>
+            )}
             {isAdmin && (
               <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
                 Админка
