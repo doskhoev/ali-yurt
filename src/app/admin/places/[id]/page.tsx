@@ -22,6 +22,8 @@ type PlaceRow = {
   image_paths: string[];
   excerpt: string | null;
   content: string;
+  latitude: number | null;
+  longitude: number | null;
   published_at: string | null;
   updated_at: string;
 };
@@ -68,7 +70,7 @@ export default async function AdminPlaceEditPage({
   const { data: row, error } = await supabase
     .from("places")
     .select(
-      "id, slug, title, category_id, image_paths, excerpt, content, published_at, updated_at"
+      "id, slug, title, category_id, image_paths, excerpt, content, latitude, longitude, published_at, updated_at"
     )
     .eq("id", id)
     .single();
@@ -227,6 +229,41 @@ export default async function AdminPlaceEditPage({
             defaultValue={item.excerpt ?? ""}
             rows={2}
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="latitude">Широта (latitude)</Label>
+            <Input
+              id="latitude"
+              name="latitude"
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              defaultValue={item.latitude ?? ""}
+              placeholder="43.12345678"
+            />
+            <p className="text-xs text-muted-foreground">
+              От -90 до 90
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="longitude">Долгота (longitude)</Label>
+            <Input
+              id="longitude"
+              name="longitude"
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              defaultValue={item.longitude ?? ""}
+              placeholder="44.12345678"
+            />
+            <p className="text-xs text-muted-foreground">
+              От -180 до 180
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">

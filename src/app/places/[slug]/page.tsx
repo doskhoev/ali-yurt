@@ -22,6 +22,8 @@ type PlaceRow = {
   image_paths: string[];
   excerpt: string | null;
   content: string;
+  latitude: number | null;
+  longitude: number | null;
   published_at: string | null;
 };
 
@@ -49,7 +51,7 @@ async function getPlaceBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("places")
-    .select("id, slug, title, category_id, image_paths, excerpt, content, published_at")
+    .select("id, slug, title, category_id, image_paths, excerpt, content, latitude, longitude, published_at")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -174,6 +176,19 @@ export default async function PlaceSlugPage({
                 />
               )}
               <span>{category.title}</span>
+            </div>
+          )}
+          {item.latitude !== null && item.longitude !== null && (
+            <div className="text-sm text-muted-foreground">
+              <span>Координаты: </span>
+              <a
+                href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+              >
+                {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
+              </a>
             </div>
           )}
         </header>

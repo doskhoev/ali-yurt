@@ -76,6 +76,39 @@ export default async function AdminPlaceNewPage({
           <Textarea id="excerpt" name="excerpt" rows={2} />
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="latitude">Широта (latitude)</Label>
+            <Input
+              id="latitude"
+              name="latitude"
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              placeholder="43.12345678"
+            />
+            <p className="text-xs text-muted-foreground">
+              От -90 до 90
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="longitude">Долгота (longitude)</Label>
+            <Input
+              id="longitude"
+              name="longitude"
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              placeholder="44.12345678"
+            />
+            <p className="text-xs text-muted-foreground">
+              От -180 до 180
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="content">
             Контент (Markdown) <span className="text-red-600">*</span>

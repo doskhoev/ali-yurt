@@ -362,6 +362,18 @@
   svg[stroke="currentColor"] {
     stroke: currentColor;
   }
+  
+  /* Гарантируем, что все элементы внутри SVG сохраняют свои размеры и видимость */
+  svg rect,
+  svg path,
+  svg ellipse,
+  svg circle,
+  svg polygon,
+  svg polyline {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+  }
 }
 
 /* Анимация для Top Loading Bar */

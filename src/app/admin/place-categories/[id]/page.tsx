@@ -128,7 +128,9 @@ export default async function AdminPlaceCategoryEditPage({
             <div className="mt-2 p-4 border rounded-lg bg-muted/50 flex items-center justify-center min-h-[100px]">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
-                <CategoryIcon svgCode={item.icon_svg} className="w-16 h-16 text-primary" />
+                <div className="inline-block p-2 border-2 border-border rounded-lg">
+                  <CategoryIcon svgCode={item.icon_svg} className="w-16 h-16 text-primary" />
+                </div>
               </div>
             </div>
           )}

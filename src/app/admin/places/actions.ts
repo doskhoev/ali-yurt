@@ -12,6 +12,8 @@ export async function createPlace(formData: FormData) {
   const slugInput = String(formData.get("slug") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "").trim();
   const publish = String(formData.get("publish") ?? "") === "1";
+  const latitudeInput = String(formData.get("latitude") ?? "").trim();
+  const longitudeInput = String(formData.get("longitude") ?? "").trim();
 
   if (!title || !content || !categoryId) return;
 
@@ -23,6 +25,24 @@ export async function createPlace(formData: FormData) {
   const id = crypto.randomUUID();
   const slug = slugInput ? slugify(slugInput) : slugify(title);
 
+  // Парсим координаты
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  
+  if (latitudeInput) {
+    const lat = parseFloat(latitudeInput);
+    if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+      latitude = lat;
+    }
+  }
+  
+  if (longitudeInput) {
+    const lng = parseFloat(longitudeInput);
+    if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+      longitude = lng;
+    }
+  }
+
   const { error } = await supabase
     .from("places")
     .insert({
@@ -32,6 +52,8 @@ export async function createPlace(formData: FormData) {
       category_id: categoryId,
       excerpt: excerpt || null,
       content,
+      latitude,
+      longitude,
       author_id: user.id,
       published_at: publish ? new Date().toISOString() : null,
     })
@@ -50,6 +72,8 @@ export async function updatePlace(id: string, formData: FormData) {
   const slugInput = String(formData.get("slug") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "").trim();
   const publish = String(formData.get("publish") ?? "") === "1";
+  const latitudeInput = String(formData.get("latitude") ?? "").trim();
+  const longitudeInput = String(formData.get("longitude") ?? "").trim();
 
   if (!title || !content || !categoryId) return;
 
@@ -59,6 +83,24 @@ export async function updatePlace(id: string, formData: FormData) {
   if (!user) redirect("/login");
 
   const slug = slugInput ? slugify(slugInput) : slugify(title);
+
+  // Парсим координаты
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  
+  if (latitudeInput) {
+    const lat = parseFloat(latitudeInput);
+    if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+      latitude = lat;
+    }
+  }
+  
+  if (longitudeInput) {
+    const lng = parseFloat(longitudeInput);
+    if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+      longitude = lng;
+    }
+  }
 
   const { data: existing } = await supabase
     .from("places")
@@ -78,6 +120,8 @@ export async function updatePlace(id: string, formData: FormData) {
       category_id: categoryId,
       excerpt: excerpt || null,
       content,
+      latitude,
+      longitude,
       published_at: nextPublishedAt,
     })
     .eq("id", id);
