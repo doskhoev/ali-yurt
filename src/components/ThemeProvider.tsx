@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-type Theme = "light" | "dark" | "graphite" | "system";
+type Theme = "light" | "dark" | "system";
 type AccentColor = "default" | "blue" | "green" | "purple" | "orange" | "red" | "pink" | "yellow" | "lightBlue";
 
 const THEME_STORAGE_KEY = "ali-yurt-theme";
@@ -53,7 +53,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const savedAccent = localStorage.getItem(ACCENT_STORAGE_KEY) as AccentColor | null;
 
-    const initialTheme = savedTheme ?? "dark";
+    let initialTheme = savedTheme ?? "dark";
+    if (initialTheme === "graphite") {
+      initialTheme = "dark";
+      localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    }
     const initialAccent = savedAccent ?? "green";
 
     setTheme(initialTheme);
@@ -89,9 +93,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return () => mediaQuery.removeEventListener("change", handleChange);
     } else {
       root.classList.toggle("dark", theme === "dark");
-      root.classList.toggle("graphite", theme === "graphite");
-      const resolved = theme === "dark" ? "dark" : theme === "graphite" ? "graphite" : "light";
-      setCookie("ali-yurt-theme-resolved", resolved);
+      setCookie("ali-yurt-theme-resolved", theme === "dark" ? "dark" : "light");
     }
 
     // Apply accent color

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 type Accent = "default" | "blue" | "green" | "purple" | "orange" | "red" | "pink" | "yellow" | "lightBlue";
-type Theme = "light" | "dark" | "graphite" | "system";
+type Theme = "light" | "dark" | "system";
 
 const ACCENT_HEX: Record<Exclude<Accent, "default">, { light: string; dark: string }> = {
   blue: { light: "#3b82f6", dark: "#60a5fa" },
@@ -29,7 +29,7 @@ function isValidAccent(value: string | undefined): value is Accent {
 }
 
 function isValidTheme(value: string | undefined): value is Theme {
-  return value === "light" || value === "dark" || value === "graphite" || value === "system";
+  return value === "light" || value === "dark" || value === "system";
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -59,16 +59,14 @@ export async function GET(request: NextRequest) {
 
   const accent: Accent = isValidAccent(accentCookieRaw) ? accentCookieRaw : "green";
   const themePref: Theme = isValidTheme(themeCookieRaw) ? themeCookieRaw : "dark";
-  const resolvedTheme: "light" | "dark" | "graphite" =
-    resolvedThemeRaw === "light" || resolvedThemeRaw === "dark" || resolvedThemeRaw === "graphite"
-      ? resolvedThemeRaw
-      : "dark";
+  const resolvedTheme: "light" | "dark" =
+    resolvedThemeRaw === "light" || resolvedThemeRaw === "dark" ? resolvedThemeRaw : "dark";
 
-  const effectiveTheme: "light" | "dark" | "graphite" =
+  const effectiveTheme: "light" | "dark" =
     themePref === "system" ? resolvedTheme : themePref;
 
-  // "default" в UI: черный на светлой теме, белый на темной/графите
-  const isDim = effectiveTheme === "dark" || effectiveTheme === "graphite";
+  // "default" в UI: черный на светлой теме, белый на темной
+  const isDim = effectiveTheme === "dark";
   const bgColor =
     accent === "default"
       ? isDim ? "#ffffff" : "#000000"

@@ -74,9 +74,6 @@ export default async function RootLayout({
                 } else if (theme === 'dark') {
                   document.cookie = 'ali-yurt-theme-resolved=dark; path=/; max-age=31536000';
                   root.classList.add('dark');
-                } else if (theme === 'graphite') {
-                  document.cookie = 'ali-yurt-theme-resolved=graphite; path=/; max-age=31536000';
-                  root.classList.add('graphite');
                 } else {
                   document.cookie = 'ali-yurt-theme-resolved=light; path=/; max-age=31536000';
                 }
