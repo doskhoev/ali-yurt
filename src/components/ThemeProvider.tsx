@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark" | "graphite" | "system";
 type AccentColor = "default" | "blue" | "green" | "purple" | "orange" | "red" | "pink" | "yellow" | "lightBlue";
 
 const THEME_STORAGE_KEY = "ali-yurt-theme";
@@ -89,7 +89,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return () => mediaQuery.removeEventListener("change", handleChange);
     } else {
       root.classList.toggle("dark", theme === "dark");
-      setCookie("ali-yurt-theme-resolved", theme === "dark" ? "dark" : "light");
+      root.classList.toggle("graphite", theme === "graphite");
+      const resolved = theme === "dark" ? "dark" : theme === "graphite" ? "graphite" : "light";
+      setCookie("ali-yurt-theme-resolved", resolved);
     }
 
     // Apply accent color

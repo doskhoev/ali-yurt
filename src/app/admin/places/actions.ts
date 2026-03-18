@@ -130,7 +130,7 @@ export async function updatePlace(id: string, formData: FormData) {
     redirect(`/admin/places/${id}?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/admin/places");
+  redirect(`/admin/places/${id}`);
 }
 
 export async function deletePlace(id: string) {

@@ -5,7 +5,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sun, Moon, Monitor, Palette } from "lucide-react";
+import { Sun, Moon, Monitor, Palette, Contrast } from "lucide-react";
 
 const accentColors = [
   { id: "default", name: "По умолчанию", color: "oklch(0.5 0 0)" },
@@ -37,10 +37,10 @@ export default function SettingsPage() {
             <Sun className="h-5 w-5" />
             Тема
           </CardTitle>
-          <CardDescription>Выберите светлую или темную тему</CardDescription>
+          <CardDescription>Выберите тему оформления</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
             <Button
               variant={theme === "light" ? "default" : "outline"}
               onClick={() => updateTheme("light")}
@@ -58,6 +58,15 @@ export default function SettingsPage() {
               <Moon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Темная</span>
               <span className="sm:hidden">Темная</span>
+            </Button>
+            <Button
+              variant={theme === "graphite" ? "default" : "outline"}
+              onClick={() => updateTheme("graphite")}
+              className="flex-1"
+            >
+              <Contrast className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Графит</span>
+              <span className="sm:hidden">Графит</span>
             </Button>
             <Button
               variant={theme === "system" ? "default" : "outline"}

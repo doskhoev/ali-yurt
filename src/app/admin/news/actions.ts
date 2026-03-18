@@ -82,7 +82,7 @@ export async function updateNews(id: string, formData: FormData) {
     redirect(`/admin/news/${id}?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/admin/news");
+  redirect(`/admin/news/${id}`);
 }
 
 export async function deleteNews(id: string) {
