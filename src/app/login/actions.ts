@@ -61,13 +61,13 @@ export async function verifyLoginCode(formData: FormData) {
     }
   }
 
-  redirect("/");
+  redirect("/news");
 }
 
 export async function signOut() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
-  redirect("/");
+  redirect("/news");
 }
 
 

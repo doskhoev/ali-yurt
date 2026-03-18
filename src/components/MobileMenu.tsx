@@ -37,7 +37,7 @@ export function MobileMenu({ isAdmin, user, username }: MobileMenuProps) {
         </SheetHeader>
         <nav className="flex flex-col gap-4 mt-6">
           <Link
-            href="/"
+            href="/news"
             onClick={() => setOpen(false)}
             className="text-base font-semibold hover:text-foreground"
           >

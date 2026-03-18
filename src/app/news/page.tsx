@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     title: "Новости | Али-Юрт",
     description: "Актуальные новости села Али-Юрт.",
   },
+  alternates: {
+    canonical: "/news",
+  },
 };
 
 type NewsRow = {

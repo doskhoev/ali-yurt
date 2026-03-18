@@ -36,7 +36,7 @@ export async function SiteHeader() {
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-12">
           <MobileMenu isAdmin={isAdmin} user={user} username={username} />
-          <Link href="/" className="font-semibold">
+          <Link href="/news" className="font-semibold">
             Али-Юрт
           </Link>
           <nav className="hidden md:flex items-center gap-4">
