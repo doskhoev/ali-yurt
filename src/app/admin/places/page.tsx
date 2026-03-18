@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Pencil } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PLACE_COVER_BUCKET } from "@/lib/storage";
 import { EditButton } from "@/components/EditButton";
@@ -93,13 +92,6 @@ export default async function AdminPlacesIndexPage() {
                     ) : (
                       <div className="font-medium">{p.title}</div>
                     )}
-                    <Link
-                      href={`/admin/places/${p.id}`}
-                      className="text-muted-foreground hover:text-primary p-1 rounded"
-                      title="Редактировать"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
                     {!p.published_at && (
                       <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
                         Черновик

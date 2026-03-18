@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Pencil } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -114,11 +115,11 @@ export default async function PlacesIndexPage() {
             return (
               <li
                 key={p.id}
-                className={`rounded-xl border overflow-hidden ${
+                className={`rounded-xl border overflow-hidden flex ${
                   !p.published_at ? "bg-muted/50 border-border opacity-75" : ""
                 }`}
               >
-                <Link href={`/places/${p.slug}`} className="block">
+                <Link href={`/places/${p.slug}`} className="flex-1 block min-w-0">
                   <div className="flex gap-4">
                     {firstImageUrl && (
                       <div className="relative w-32 h-32 flex-shrink-0">
@@ -130,7 +131,7 @@ export default async function PlacesIndexPage() {
                         />
                       </div>
                     )}
-                    <div className="p-5 flex-1 space-y-1">
+                    <div className="p-5 flex-1 space-y-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <div className="text-lg font-medium">{p.title}</div>
                         {!p.published_at && (
@@ -156,6 +157,15 @@ export default async function PlacesIndexPage() {
                     </div>
                   </div>
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href={`/admin/places/${p.id}`}
+                    className="text-muted-foreground hover:text-primary p-3 flex-shrink-0 self-center"
+                    title="Редактировать"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Link>
+                )}
               </li>
             );
           })}
