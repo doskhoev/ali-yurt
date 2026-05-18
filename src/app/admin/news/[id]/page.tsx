@@ -206,6 +206,27 @@ export default async function AdminNewsEditPage({
             rows={14}
             className="font-mono text-sm"
           />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Картинки из блока «Изображения» выше вставляйте плейсхолдерами{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:0}}"}
+            </code>
+            ,{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:1}}"}
+            </code>{" "}
+            и т.д.: число — это позиция файла в списке превью сверху вниз, считая с нуля. Размер на
+            странице можно задать так:{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:0:640x480}}"}
+            </code>{" "}
+            (ширина и высота в пикселях; без{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              :WxH
+            </code>{" "}
+            — как раньше, 800×400 и ограничение по высоте 400px). После удаления картинки из списка
+            нумерация сдвигается — проверьте плейсхолдеры в тексте.
+          </p>
         </div>
 
         <div className="flex items-center space-x-2">

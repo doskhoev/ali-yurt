@@ -7,6 +7,12 @@ import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { cn } from "@/lib/utils";
+
+const DEFAULT_IMAGE_WIDTH = 800;
+const DEFAULT_IMAGE_HEIGHT = 400;
+const IMAGE_PLACEHOLDER_REGEX = /\{\{image:(\d+)(?::(\d+)x(\d+))?\}\}/g;
+const MAX_IMAGE_PLACEHOLDER_SIDE = 4096;
 
 const components: Components = {
   code({ node, className, children, ...props }) {
@@ -95,6 +101,19 @@ type MarkdownProps = {
   imageAlt?: string;
 };
 
+type ImagePart = {
+  type: "image";
+  imageIndex: number;
+  displayWidth: number;
+  displayHeight: number;
+  customSize: boolean;
+};
+
+function clampImagePlaceholderSide(n: number): number {
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(Math.round(n), MAX_IMAGE_PLACEHOLDER_SIDE);
+}
+
 export function Markdown({ value, imageUrls = [], imageAlt = "Изображение" }: MarkdownProps) {
   // Разбиваем контент на части: текст и изображения
   const contentParts = React.useMemo(() => {
@@ -102,14 +121,27 @@ export function Markdown({ value, imageUrls = [], imageAlt = "Изображен
       return [{ type: "text" as const, content: value }];
     }
 
-    const parts: Array<{ type: "text" | "image"; content?: string; imageIndex?: number }> = [];
-    const placeholderRegex = /\{\{image:(\d+)\}\}/g;
+    const parts: Array<{ type: "text"; content: string } | ImagePart> = [];
+    const placeholderRegex = new RegExp(
+      IMAGE_PLACEHOLDER_REGEX.source,
+      IMAGE_PLACEHOLDER_REGEX.flags
+    );
     let lastIndex = 0;
     let match;
 
     while ((match = placeholderRegex.exec(value)) !== null) {
       const imageIndex = parseInt(match[1], 10);
-      
+      const wRaw = match[2];
+      const hRaw = match[3];
+      const hasCustom =
+        wRaw !== undefined && hRaw !== undefined && wRaw.length > 0 && hRaw.length > 0;
+      const displayWidth = hasCustom
+        ? clampImagePlaceholderSide(parseInt(wRaw, 10))
+        : DEFAULT_IMAGE_WIDTH;
+      const displayHeight = hasCustom
+        ? clampImagePlaceholderSide(parseInt(hRaw, 10))
+        : DEFAULT_IMAGE_HEIGHT;
+
       // Добавляем текст до плейсхолдера
       if (match.index > lastIndex) {
         const textBefore = value.substring(lastIndex, match.index);
@@ -120,7 +152,13 @@ export function Markdown({ value, imageUrls = [], imageAlt = "Изображен
 
       // Проверяем, существует ли изображение с таким индексом
       if (imageIndex >= 0 && imageIndex < imageUrls.length && imageUrls[imageIndex]) {
-        parts.push({ type: "image", imageIndex });
+        parts.push({
+          type: "image",
+          imageIndex,
+          displayWidth,
+          displayHeight,
+          customSize: Boolean(hasCustom),
+        });
       }
 
       lastIndex = match.index + match[0].length;
@@ -145,16 +183,28 @@ export function Markdown({ value, imageUrls = [], imageAlt = "Изображен
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
       {contentParts.map((part, index) => {
-        if (part.type === "image" && part.imageIndex !== undefined) {
+        if (part.type === "image") {
+          const { imageIndex, displayWidth, displayHeight, customSize } = part;
           return (
             <div key={`image-${index}`} className="flex justify-center my-6">
               <Image
-                src={imageUrls[part.imageIndex]}
-                alt={`${imageAlt} ${part.imageIndex + 1}`}
-                width={800}
-                height={400}
-                className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-xl border"
-                style={{ height: "auto" }}
+                src={imageUrls[imageIndex]}
+                alt={`${imageAlt} ${imageIndex + 1}`}
+                width={displayWidth}
+                height={displayHeight}
+                className={cn(
+                  "max-w-full w-auto h-auto object-contain rounded-xl border",
+                  !customSize && "max-h-[400px]"
+                )}
+                style={
+                  customSize
+                    ? {
+                        height: "auto",
+                        maxWidth: "100%",
+                        maxHeight: `min(${displayHeight}px, 90vh)`,
+                      }
+                    : { height: "auto" }
+                }
               />
             </div>
           );

@@ -54,6 +54,34 @@ export default function AdminNewsNewPage({
             rows={14}
             className="font-mono text-sm"
           />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Сначала сохраните новость, затем на странице редактирования загрузите изображения. В
+            текст вставляйте плейсхолдеры{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:0}}"}
+            </code>
+            ,{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:1}}"}
+            </code>{" "}
+            и т.д.: индекс совпадает с порядком превью в блоке изображений (первая сверху —{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              0
+            </code>
+            ). Размер:{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              {"{{image:0:640x480}}"}
+            </code>{" "}
+            — ширина и высота в пикселях; без{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              :WxH
+            </code>{" "}
+            используются размеры по умолчанию. Обычный Markdown{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.8rem] text-foreground">
+              ![](url)
+            </code>{" "}
+            для этих файлов не нужен.
+          </p>
         </div>
 
         <div className="flex items-center space-x-2">
