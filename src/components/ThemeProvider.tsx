@@ -53,11 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const savedAccent = localStorage.getItem(ACCENT_STORAGE_KEY) as AccentColor | null;
 
-    let initialTheme = savedTheme ?? "dark";
-    if (initialTheme === "graphite") {
-      initialTheme = "dark";
-      localStorage.setItem(THEME_STORAGE_KEY, "dark");
-    }
+    const initialTheme = savedTheme ?? "dark";
     const initialAccent = savedAccent ?? "green";
 
     setTheme(initialTheme);
